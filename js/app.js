@@ -1,165 +1,287 @@
 const INSCRIPCION =
   "https://docs.google.com/forms/d/e/1FAIpQLSeCe_VWfR8P3kE1a_nYzqikue500G44iFqgBQCtiICVm6OCzg/viewform?usp=dialog";
 const OBSERVATORIO = "https://claudiomlarrea.github.io/observatorio-ia/";
-const KEY_VISITAS = "sia-uccuyo-visitas-v1";
-const KEY_LIBRO = "sia-uccuyo-libro-v1";
+const GEO_SESSION_KEY = "sia_visitgeo_once";
 
-const SEED = [
-  { id: "sl", lugar: "San Luis, Argentina", lat: -33.3017, lon: -66.3378, n: 18, tipo: "interna" },
-  { id: "sj", lugar: "San Juan, Argentina", lat: -31.5375, lon: -68.5364, n: 11, tipo: "interna" },
-  { id: "mz", lugar: "Mendoza, Argentina", lat: -32.8895, lon: -68.8458, n: 7, tipo: "interna" },
-  { id: "ba", lugar: "Buenos Aires, Argentina", lat: -34.6037, lon: -58.3816, n: 9, tipo: "externa" },
-  { id: "cba", lugar: "Córdoba, Argentina", lat: -31.4201, lon: -64.1888, n: 4, tipo: "externa" },
-  { id: "cl", lugar: "Santiago, Chile", lat: -33.4489, lon: -70.6693, n: 2, tipo: "externa" },
-  { id: "es", lugar: "Barcelona, España", lat: 41.3874, lon: 2.1686, n: 1, tipo: "externa" },
-];
+const CENTROIDS = {
+  AR: [-64.0, -34.6],
+  CL: [-71.5, -35.7],
+  ES: [-3.7, 40.4],
+  UY: [-56.0, -32.5],
+  BR: [-51.9, -14.2],
+  US: [-98.6, 39.8],
+  MX: [-102.5, 23.6],
+  PE: [-75.0, -9.2],
+  CO: [-74.3, 4.6],
+  FR: [2.2, 46.2],
+  IT: [12.6, 41.9],
+  DE: [10.5, 51.2],
+};
+const AR_REGIONS = {
+  "san luis": [-66.34, -33.3],
+  "san juan": [-68.54, -31.54],
+  mendoza: [-68.85, -32.89],
+  "buenos aires": [-58.38, -34.6],
+  cordoba: [-64.19, -31.42],
+  córdoba: [-64.19, -31.42],
+  "santa fe": [-60.7, -31.6],
+  tucuman: [-65.22, -26.82],
+  tucumán: [-65.22, -26.82],
+  salta: [-65.41, -24.79],
+};
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const tt = (key, fallback, vars) =>
+  window.I18N && window.I18N.t ? window.I18N.t(key, vars) : fallback;
 
-function loadVisitas() {
-  try {
-    const raw = localStorage.getItem(KEY_VISITAS);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
-  return SEED.map((x) => ({ ...x }));
+let map, markersLayer, visitas = [], libro = [], filtro = "todas";
+
+function cfg() {
+  return window.SIA_CONFIG || {};
 }
 
-function saveVisitas(rows) {
-  localStorage.setItem(KEY_VISITAS, JSON.stringify(rows));
+function appsUrl(action, extra) {
+  var base = (cfg().APPS_SCRIPT_URL || "").trim();
+  if (!base) return "";
+  var qs =
+    (base.indexOf("?") >= 0 ? "&" : "?") +
+    "action=" + encodeURIComponent(action) +
+    "&site=" + encodeURIComponent(cfg().SITE || "semillero") +
+    "&_=" + Date.now();
+  if (extra) qs += "&" + extra;
+  return base + qs;
 }
 
-function loadLibro() {
-  try {
-    const raw = localStorage.getItem(KEY_LIBRO);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
-  return [
-    {
-      nombre: "Visita institucional (muestra)",
-      institucion: "Universidad invitada",
-      tipo: "externa",
-      motivo: "Vinculación",
-      mensaje: "Espacio de ejemplo. Las nuevas visitas de externos aparecen aquí.",
-      cuando: "2026-08-20",
-    },
-  ];
+function fetchJson(url) {
+  return fetch(url, { method: "GET", cache: "no-store" }).then(function (r) {
+    if (!r.ok) throw new Error("network");
+    return r.json();
+  });
 }
 
-function saveLibro(rows) {
-  localStorage.setItem(KEY_LIBRO, JSON.stringify(rows));
+function fetchJsonp(url) {
+  return new Promise(function (resolve, reject) {
+    var name = "_siaCb_" + Math.floor(Math.random() * 1e9);
+    var done = false;
+    var script = document.createElement("script");
+    window[name] = function (data) {
+      if (done) return;
+      done = true;
+      delete window[name];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(data);
+    };
+    script.async = true;
+    script.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + encodeURIComponent(name);
+    script.onerror = function () {
+      if (done) return;
+      done = true;
+      delete window[name];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error("jsonp"));
+    };
+    document.body.appendChild(script);
+    setTimeout(function () { if (!done) script.onerror(); }, 20000);
+  });
 }
 
-function slugLugar(pais, region, ciudad) {
-  const bits = [ciudad, region, pais].filter(Boolean);
-  return bits.join(", ") || "Origen no determinado";
+function fetchApps(action, extra) {
+  var url = appsUrl(action, extra);
+  if (!url) return Promise.reject(new Error("no-backend"));
+  return fetchJson(url).then(function (data) { return data; }, function () {
+    return fetchJsonp(url);
+  });
 }
 
-let map, markersLayer, visitas, filtro = "todas";
+function applyState(data) {
+  if (!data || data.ok === false) return;
+  visitas = Array.isArray(data.visitas) ? data.visitas : visitas;
+  libro = Array.isArray(data.libro) ? data.libro : libro;
+  renderRanking();
+  drawMarkers();
+  renderLibro();
+  var t = totals(visitas);
+  var c = $("#c-visitas");
+  if (c) c.textContent = String(t.todas);
+}
+
+function loadSharedState() {
+  return fetchApps("state")
+    .then(applyState)
+    .catch(function () {
+      var url = (cfg().STATE_URL || "data/state.json") + "?t=" + Date.now();
+      return fetchJson(url).then(applyState);
+    });
+}
 
 function totals(rows) {
-  const t = { todas: 0, interna: 0, externa: 0 };
-  for (const r of rows) {
-    t.todas += r.n;
-    t[r.tipo] += r.n;
-  }
+  var t = { todas: 0, interna: 0, externa: 0 };
+  (rows || []).forEach(function (r) {
+    t.todas += Number(r.n) || 0;
+    t[r.tipo === "interna" ? "interna" : "externa"] += Number(r.n) || 0;
+  });
   return t;
 }
 
+function coordsFor(row) {
+  if (row.lat && row.lon) return [row.lat, row.lon];
+  var reg = String(row.region || row.lugar || "").toLowerCase();
+  for (var k in AR_REGIONS) {
+    if (reg.indexOf(k) >= 0) {
+      var a = AR_REGIONS[k];
+      return [a[1], a[0]];
+    }
+  }
+  var cc = String(row.country || "").toUpperCase();
+  if (CENTROIDS[cc]) {
+    var c = CENTROIDS[cc];
+    return [c[1], c[0]];
+  }
+  return [-34.6, -64.0];
+}
+
 function renderRanking() {
-  const ul = $("#origenes");
-  const rows = visitas
-    .filter((r) => filtro === "todas" || r.tipo === filtro)
-    .sort((a, b) => b.n - a.n);
-  ul.innerHTML = rows
-    .map(
-      (r) => `<li data-id="${r.id}">
-        <span><strong>${r.lugar}</strong><br><span class="tag ${r.tipo === "externa" ? "ext" : "int"}">${r.tipo}</span></span>
-        <b>${r.n}</b>
-      </li>`
-    )
-    .join("");
-  $$("#origenes li").forEach((li) => {
-    li.addEventListener("click", () => {
-      $$("#origenes li").forEach((x) => x.classList.remove("on"));
+  var ul = $("#origenes");
+  if (!ul) return;
+  var rows = visitas
+    .filter(function (r) { return filtro === "todas" || r.tipo === filtro; })
+    .sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
+  ul.innerHTML = rows.map(function (r) {
+    var tag = r.tipo === "interna" ? "interna" : "externa";
+    return (
+      '<li data-id="' + r.id + '">' +
+      "<span><strong>" + escapeHtml(r.lugar) + "</strong><br>" +
+      '<span class="tag ' + (tag === "externa" ? "ext" : "int") + '">' +
+      tt("tag." + tag, tag) + "</span></span><b>" + (r.n || 0) + "</b></li>"
+    );
+  }).join("");
+  $$("#origenes li").forEach(function (li) {
+    li.addEventListener("click", function () {
+      $$("#origenes li").forEach(function (x) { x.classList.remove("on"); });
       li.classList.add("on");
-      const row = visitas.find((v) => v.id === li.dataset.id);
-      if (row && map) map.setView([row.lat, row.lon], 6);
+      var row = visitas.find(function (v) { return v.id === li.dataset.id; });
+      if (row && map) {
+        var ll = coordsFor(row);
+        map.setView(ll, 6);
+      }
     });
   });
-  const t = totals(visitas);
+  var t = totals(visitas);
   $("#n-todas").textContent = t.todas;
   $("#n-ext").textContent = t.externa;
   $("#n-int").textContent = t.interna;
+}
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function drawMarkers() {
   if (!markersLayer) return;
   markersLayer.clearLayers();
   visitas
-    .filter((r) => filtro === "todas" || r.tipo === filtro)
-    .forEach((r) => {
-      const color = r.tipo === "externa" ? "#7D1B1C" : "#064A31";
-      const m = L.circleMarker([r.lat, r.lon], {
-        radius: 7 + Math.min(r.n, 12),
-        color,
+    .filter(function (r) { return filtro === "todas" || r.tipo === filtro; })
+    .forEach(function (r) {
+      var color = r.tipo === "interna" ? "#064A31" : "#7D1B1C";
+      var ll = coordsFor(r);
+      var m = L.circleMarker(ll, {
+        radius: 7 + Math.min(Number(r.n) || 1, 12),
+        color: color,
         weight: 2,
         fillColor: color,
         fillOpacity: 0.55,
-      }).bindPopup(`<strong>${r.lugar}</strong><br>${r.n} visita${r.n === 1 ? "" : "s"} · ${r.tipo}`);
+      }).bindPopup("<strong>" + escapeHtml(r.lugar) + "</strong><br>" + (r.n || 0));
       markersLayer.addLayer(m);
     });
 }
 
-function upsertVisita(lugar, lat, lon, tipo) {
-  const id = lugar.toLowerCase().replace(/[^a-z0-9]+/gi, "-");
-  const found = visitas.find((v) => v.id === id);
-  if (found) {
-    found.n += 1;
-    found.tipo = tipo || found.tipo;
-  } else {
-    visitas.push({ id, lugar, lat, lon, n: 1, tipo: tipo || "externa" });
-  }
-  saveVisitas(visitas);
-  renderRanking();
-  drawMarkers();
+function renderLibro() {
+  var box = $("#libro");
+  if (!box) return;
+  var rows = libro.slice().reverse();
+  box.innerHTML = rows.map(function (n) {
+    var lugar = n.lugar ? " · " + escapeHtml(n.lugar) : "";
+    return (
+      '<article class="note"><strong>' + escapeHtml(n.nombre) + "</strong> · " +
+      escapeHtml(n.institucion) + "<br><small>" + escapeHtml(n.cuando) + " · " +
+      escapeHtml(n.motivo) + " · " + tt("tag." + (n.tipo === "interna" ? "interna" : "externa"), n.tipo) +
+      lugar +
+      "</small><p>" + escapeHtml(n.mensaje) + "</p></article>"
+    );
+  }).join("");
 }
 
-function renderLibro() {
-  const box = $("#libro");
-  const rows = loadLibro().slice().reverse();
-  box.innerHTML = rows
-    .map(
-      (n) => `<article class="note">
-        <strong>${n.nombre}</strong> · ${n.institucion}
-        <br><small>${n.cuando} · ${n.motivo} · visita ${n.tipo}</small>
-        <p>${n.mensaje}</p>
-      </article>`
-    )
-    .join("");
+function geoPayload(geo) {
+  /* ipapi.co incluye "ip" en el JSON: se descarta y nunca se envía al backend. */
+  var country = String(geo.country_code || "").trim();
+  var countryName = String(geo.country_name || "").trim();
+  var region = String(geo.region || "").trim();
+  var city = String(geo.city || "").trim();
+  var lat = Number(geo.latitude);
+  var lon = Number(geo.longitude);
+  if (!isFinite(lat) || !isFinite(lon)) {
+    lat = 0;
+    lon = 0;
+  } else {
+    lat = Math.round(lat * 100) / 100;
+    lon = Math.round(lon * 100) / 100;
+  }
+  var campus = /san luis|san juan|mendoza/i.test(city + " " + region);
+  var tipo = campus ? "interna" : "externa";
+  var bits = [city, region, countryName].filter(Boolean);
+  return {
+    country: country,
+    countryName: countryName,
+    region: region,
+    city: city,
+    lat: lat,
+    lon: lon,
+    tipo: tipo,
+    lugar: bits.join(", ") || countryName || "Origen no determinado",
+  };
 }
 
 async function geolocalizar() {
-  const banner = $("#banner-you");
+  var banner = $("#banner-you");
   try {
-    const res = await fetch("https://ipapi.co/json/");
+    var res = await fetch("https://ipapi.co/json/", { method: "GET" });
     if (!res.ok) throw new Error("geo");
-    const data = await res.json();
-    const lugar = slugLugar(data.country_name, data.region, data.city);
-    const lat = Number(data.latitude) || -33.3;
-    const lon = Number(data.longitude) || -66.34;
-    const campus = /san luis|san juan|mendoza/i.test(`${data.city} ${data.region}`);
-    const tipo = campus ? "interna" : "externa";
+    var raw = await res.json();
+    var g = geoPayload(raw);
     banner.classList.add("show");
-    banner.innerHTML = `Estás visitando desde <strong>${lugar}</strong> · se registra como visita <strong>${tipo}</strong> (estimación por IP, no se guarda tu dirección).`;
-    upsertVisita(lugar, lat, lon, tipo);
-    if (map) map.setView([lat, lon], 5);
-    $("#campo-lugar").value = lugar;
-    if (!campus) $("#campo-tipo").value = "externa";
-  } catch (_) {
+    banner.innerHTML = tt("sec.vis.you", "Estás visitando desde {lugar} · se registra como visita {tipo} (país y región estimados; no se guarda la IP).", {
+      lugar: g.lugar,
+      tipo: tt("tag." + g.tipo, g.tipo),
+    });
+    if ($("#campo-lugar")) $("#campo-lugar").value = g.lugar;
+    if ($("#campo-tipo")) $("#campo-tipo").value = g.tipo;
+    if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
+    if (!sessionStorage.getItem(GEO_SESSION_KEY)) {
+      var extra =
+        "country=" + encodeURIComponent(g.country) +
+        "&countryName=" + encodeURIComponent(g.countryName) +
+        "&region=" + encodeURIComponent(g.region) +
+        "&city=" + encodeURIComponent(g.city) +
+        "&tipo=" + encodeURIComponent(g.tipo) +
+        "&lat=" + encodeURIComponent(g.lat) +
+        "&lon=" + encodeURIComponent(g.lon);
+      try {
+        await fetchApps("visitgeo", extra).then(applyState);
+      } catch (_be) {
+        /* El mapa sigue mostrando el estado compartido (Apps Script o data/state.json). */
+      }
+      sessionStorage.setItem(GEO_SESSION_KEY, "1");
+    }
+  } catch (_err) {
     banner.classList.add("show");
-    banner.textContent =
-      "No se pudo estimar el origen (hace falta conexión). Podés registrar la visita a mano en el libro de externos.";
+    banner.textContent = tt(
+      "sec.vis.nogeo",
+      "No se pudo estimar el origen. El mapa y el ranking siguen siendo los compartidos. Podés registrar la visita en el libro."
+    );
   }
 }
 
@@ -171,91 +293,82 @@ function initMap() {
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
   drawMarkers();
-  setTimeout(() => map.invalidateSize(), 250);
+  setTimeout(function () { map.invalidateSize(); }, 250);
 }
 
 function initNav() {
-  const links = $$("nav.menu a");
-  const sidebar = $(".sidebar");
-  const burger = $("#burger");
-  burger?.addEventListener("click", () => sidebar.classList.toggle("open"));
-  links.forEach((a) =>
-    a.addEventListener("click", () => sidebar.classList.remove("open"))
-  );
-  const io = new IntersectionObserver(
-    (entries) => {
-      const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!vis) return;
-      links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${vis.target.id}`));
-    },
-    { rootMargin: "-35% 0px -50% 0px", threshold: [0.1, 0.3, 0.6] }
-  );
-  $$("section.panel, .hero").forEach((s) => io.observe(s));
+  var links = $$("nav.menu a");
+  var sidebar = $(".sidebar");
+  $("#burger")?.addEventListener("click", function () { sidebar.classList.toggle("open"); });
+  links.forEach(function (a) {
+    a.addEventListener("click", function () { sidebar.classList.remove("open"); });
+  });
+  var io = new IntersectionObserver(function (entries) {
+    var vis = entries.filter(function (e) { return e.isIntersecting; }).sort(function (a, b) {
+      return b.intersectionRatio - a.intersectionRatio;
+    })[0];
+    if (!vis) return;
+    links.forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("href") === "#" + vis.target.id);
+    });
+  }, { rootMargin: "-35% 0px -50% 0px", threshold: [0.1, 0.3, 0.6] });
+  $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
 }
 
 function initCounters() {
-  const t = totals(visitas);
-  const targets = {
-    "#c-inscriptos": 6,
-    "#c-lineas": 6,
-    "#c-niveles": 5,
-    "#c-visitas": t.todas,
-  };
-  Object.entries(targets).forEach(([sel, n]) => {
-    const el = $(sel);
+  [["#c-inscriptos", 6], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
+    var el = $(pair[0]);
     if (!el) return;
-    let i = 0;
-    const step = Math.max(1, Math.round(n / 24));
-    const tick = () => {
-      i = Math.min(n, i + step);
-      el.textContent = String(i);
-      if (i < n) requestAnimationFrame(tick);
-    };
-    tick();
+    el.textContent = String(pair[1]);
   });
 }
 
 function initForm() {
-  $("#form-visita").addEventListener("submit", (ev) => {
+  $("#form-visita").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    const fd = new FormData(ev.currentTarget);
-    const row = {
-      nombre: String(fd.get("nombre") || "").trim(),
-      institucion: String(fd.get("institucion") || "").trim(),
-      tipo: String(fd.get("tipo") || "externa"),
-      motivo: String(fd.get("motivo") || "Visita"),
-      mensaje: String(fd.get("mensaje") || "").trim(),
-      cuando: new Date().toISOString().slice(0, 10),
-    };
-    if (!row.nombre || !row.institucion) return;
-    const libro = loadLibro();
-    libro.push(row);
-    saveLibro(libro);
-    renderLibro();
-    const lugar = String(fd.get("lugar") || row.institucion);
-    upsertVisita(lugar, -33.3, -66.34, row.tipo);
-    ev.currentTarget.reset();
-    $("#ok-visita").hidden = false;
+    var fd = new FormData(ev.currentTarget);
+    var extra =
+      "nombre=" + encodeURIComponent(String(fd.get("nombre") || "").trim()) +
+      "&institucion=" + encodeURIComponent(String(fd.get("institucion") || "").trim()) +
+      "&tipo=" + encodeURIComponent(String(fd.get("tipo") || "externa")) +
+      "&motivo=" + encodeURIComponent(String(fd.get("motivo") || "Visita")) +
+      "&mensaje=" + encodeURIComponent(String(fd.get("mensaje") || "").trim()) +
+      "&lugar=" + encodeURIComponent(String(fd.get("lugar") || "").trim());
+    fetchApps("libro", extra)
+      .then(applyState)
+      .then(function () {
+        ev.currentTarget.reset();
+        $("#ok-visita").hidden = false;
+      })
+      .catch(function () {
+        $("#ok-visita").hidden = false;
+        $("#ok-visita").textContent = tt(
+          "sec.vis.nobackend",
+          "Falta publicar el backend (backend/Code.gs). El libro compartido se activa con esa URL /exec."
+        );
+      });
   });
-  $$(".filter").forEach((btn) => {
-    btn.addEventListener("click", () => {
+  $$(".filter").forEach(function (btn) {
+    btn.addEventListener("click", function () {
       filtro = btn.dataset.filtro;
-      $$(".filter").forEach((b) => b.classList.toggle("on", b === btn));
+      $$(".filter").forEach(function (b) { b.classList.toggle("on", b === btn); });
       renderRanking();
       drawMarkers();
     });
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  visitas = loadVisitas();
+document.addEventListener("DOMContentLoaded", function () {
   initNav();
   initMap();
-  renderRanking();
-  renderLibro();
   initCounters();
   initForm();
-  geolocalizar();
-  $$("[data-inscripcion]").forEach((a) => (a.href = INSCRIPCION));
-  $$("[data-observatorio]").forEach((a) => (a.href = OBSERVATORIO));
+  loadSharedState().then(geolocalizar);
+  $$("[data-inscripcion]").forEach(function (a) { a.href = INSCRIPCION; });
+  $$("[data-observatorio]").forEach(function (a) { a.href = OBSERVATORIO; });
+});
+
+window.addEventListener("sia:langchange", function () {
+  renderRanking();
+  renderLibro();
 });

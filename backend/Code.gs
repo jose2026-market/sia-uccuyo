@@ -1,0 +1,172 @@
+/**
+ * Backend compartido SIA-UCCuyo (Google Apps Script).
+ *
+ * Cómo publicarlo (igual que el Observatorio):
+ * 1. https://script.google.com → Nuevo proyecto
+ * 2. Pegá este archivo. Implementar → Nueva implementación → Aplicación web
+ *    Ejecutar como: yo · Quién tiene acceso: Cualquiera
+ * 3. Copiá la URL que termina en /exec
+ * 4. Pegala en js/config.js → APPS_SCRIPT_URL y volvé a publicar el sitio
+ *
+ * No guarda IP. Solo país, región, ciudad estimada, y el libro de visitas.
+ */
+var SITE = "semillero";
+
+function lock_() {
+  return LockService.getScriptLock();
+}
+
+function state_() {
+  var raw = PropertiesService.getScriptProperties().getProperty("SIA_STATE");
+  if (!raw) {
+    return { visitas: [], libro: [] };
+  }
+  try {
+    var o = JSON.parse(raw);
+    if (!o.visitas) o.visitas = [];
+    if (!o.libro) o.libro = [];
+    return o;
+  } catch (e) {
+    return { visitas: [], libro: [] };
+  }
+}
+
+function save_(st) {
+  PropertiesService.getScriptProperties().setProperty("SIA_STATE", JSON.stringify(st));
+}
+
+function json_(obj, callback) {
+  var body = JSON.stringify(obj);
+  if (callback) {
+    return ContentService.createTextOutput(callback + "(" + body + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
+}
+
+function slug_(lugar) {
+  return String(lugar || "origen")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function upsertVisit_(st, rec) {
+  var id = rec.id || slug_(rec.lugar);
+  var found = null;
+  for (var i = 0; i < st.visitas.length; i++) {
+    if (st.visitas[i].id === id) {
+      found = st.visitas[i];
+      break;
+    }
+  }
+  if (found) {
+    found.n = Number(found.n || 0) + 1;
+    if (rec.tipo) found.tipo = rec.tipo;
+    if (rec.lat) found.lat = rec.lat;
+    if (rec.lon) found.lon = rec.lon;
+  } else {
+    st.visitas.push({
+      id: id,
+      lugar: rec.lugar,
+      lat: rec.lat || 0,
+      lon: rec.lon || 0,
+      n: 1,
+      tipo: rec.tipo || "externa",
+      country: rec.country || "",
+      region: rec.region || ""
+    });
+  }
+}
+
+function handle_(e) {
+  var p = (e && e.parameter) || {};
+  /* Nunca persistir IP ni campos equivalentes, aunque lleguen por error. */
+  delete p.ip;
+  delete p.IP;
+  delete p.ipAddress;
+  delete p.ip_address;
+  delete p.query;
+  delete p.address;
+  delete p.clientIp;
+  delete p.remoteAddress;
+
+  var action = String(p.action || "state");
+  var callback = p.callback || "";
+  if (p.site && String(p.site) !== SITE) {
+    return json_({ ok: false, error: "invalid_site" }, callback);
+  }
+
+  var lock = lock_();
+  lock.waitLock(15000);
+  try {
+    var st = state_();
+
+    if (action === "state") {
+      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+    }
+
+    if (action === "visitgeo") {
+      var country = String(p.countryName || p.country || "").trim();
+      var region = String(p.region || "").trim();
+      var city = String(p.city || "").trim();
+      var bits = [];
+      if (city) bits.push(city);
+      if (region) bits.push(region);
+      if (country) bits.push(country);
+      var lugar = bits.join(", ") || "Origen no determinado";
+      var tipo = String(p.tipo || "").trim();
+      if (tipo !== "interna" && tipo !== "externa") {
+        tipo = /san luis|san juan|mendoza/i.test(region + " " + city) ? "interna" : "externa";
+      }
+      upsertVisit_(st, {
+        lugar: lugar,
+        lat: Number(p.lat) || 0,
+        lon: Number(p.lon) || 0,
+        tipo: tipo,
+        country: String(p.country || ""),
+        region: region
+      });
+      save_(st);
+      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+    }
+
+    if (action === "libro") {
+      var row = {
+        nombre: String(p.nombre || "").trim().slice(0, 120),
+        institucion: String(p.institucion || "").trim().slice(0, 160),
+        tipo: p.tipo === "interna" ? "interna" : "externa",
+        motivo: String(p.motivo || "Visita").trim().slice(0, 80),
+        mensaje: String(p.mensaje || "").trim().slice(0, 800),
+        lugar: String(p.lugar || "").trim().slice(0, 160),
+        cuando: Utilities.formatDate(new Date(), "America/Argentina/Buenos_Aires", "yyyy-MM-dd")
+      };
+      if (!row.nombre || !row.institucion) {
+        return json_({ ok: false, error: "incomplete" }, callback);
+      }
+      st.libro.push(row);
+      if (p.lugar) {
+        upsertVisit_(st, {
+          lugar: String(p.lugar),
+          lat: Number(p.lat) || 0,
+          lon: Number(p.lon) || 0,
+          tipo: row.tipo
+        });
+      }
+      save_(st);
+      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+    }
+
+    return json_({ ok: false, error: "unknown_action" }, callback);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  return handle_(e);
+}
+
+function doPost(e) {
+  return handle_(e);
+}
