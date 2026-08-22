@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIA-UCCuyo · Semillero de Inteligencia Artificial</title>
+  <meta name="description" content="Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos reales y comunidad. Visitas para externos." />
+  <link rel="icon" href="assets/uccuyo_shield.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip" href="#inicio">Ir al contenido</a>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="assets/logo_observatorio.png" alt="Observatorio de IA" />
+      <div>
+        <p class="kicker">Universidad Católica de Cuyo</p>
+        <h1>Semillero de IA</h1>
+      </div>
+    </div>
+    <nav class="menu" aria-label="Secciones">
+      <a href="#inicio" class="active">Inicio</a>
+      <a href="#semillero">El semillero</a>
+      <a href="#numeros">En números</a>
+      <a href="#formacion">Formación</a>
+      <a href="#convocatoria">Convocatoria</a>
+      <a href="#lineas">Líneas de trabajo</a>
+      <a href="#visitas">Visitas para externos</a>
+      <a href="#galeria">Galería</a>
+      <a href="#contacto">Contacto</a>
+      <a href="https://claudiomlarrea.github.io/observatorio-ia/" data-observatorio target="_blank" rel="noopener">Observatorio de IA</a>
+    </nav>
+    <p class="foot">Observatorio de IA · Secretaría de Investigación y Vinculación Tecnológica · Sede San Luis</p>
+  </aside>
+
+  <header class="topbar">
+    <img src="assets/uccuyo_logo.png" alt="UCCuyo" />
+    <strong>SIA-UCCuyo</strong>
+    <button class="burger" id="burger" type="button" aria-label="Abrir menú">☰</button>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <p class="uni">Universidad Católica de Cuyo · Observatorio de Inteligencia Artificial</p>
+        <h2>Semillero de<br>Inteligencia Artificial</h2>
+        <p class="sia">SIA-UCCuyo · ciclo 2026</p>
+        <p>Formás, investigás y transformás ideas en prototipos reales, con mentoría y ética incluida. Gratuito, voluntario y abierto a todas las carreras y sedes.</p>
+        <div class="chips">
+          <span class="chip">Sin examen de código</span>
+          <span class="chip">Nivel I desde cero</span>
+          <span class="chip">Equipos mixtos</span>
+          <span class="chip">Certifica el Observatorio</span>
+        </div>
+        <div class="btn-row">
+          <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener">Inscribite ahora</a>
+          <a class="btn-3d gold" href="#visitas">Soy visitante externo</a>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img src="assets/photo_cover.jpg" alt="Estudiantes y docentes del Observatorio de IA" />
+      </div>
+    </section>
+
+    <section class="panel" id="semillero">
+      <p class="kicker">Identidad</p>
+      <h2 class="titulo">Qué es el Semillero</h2>
+      <p class="lead">Programa institucional permanente del Observatorio de IA. Tres pilares juntos: capacitación, proyectos reales y comunidad.</p>
+      <div class="grid-2">
+        <article class="card goldbar">
+          <h3>Misión</h3>
+          <p>Identificar, formar y acompañar a estudiantes de todas las carreras para que pasen de una idea —aunque sea inicial— a un prototipo con IA responsable, mentoría y certificación institucional.</p>
+        </article>
+        <article class="card goldbar">
+          <h3>Visión</h3>
+          <p>Que cada unidad académica de la UCCuyo tenga equipos estudiantiles capaces de resolver problemas reales de su disciplina con inteligencia artificial ética, interdisciplinaria y orientada al bien común.</p>
+        </article>
+      </div>
+      <div class="grid-3" style="margin-top:16px">
+        <article class="card">
+          <h3>Capacitación</h3>
+          <p>Bootcamps, talleres y ética de la IA. El Nivel I no exige saber programar.</p>
+        </article>
+        <article class="card">
+          <h3>Proyectos</h3>
+          <p>El corazón del trayecto: un problema real de tu campo, de la Universidad o de la comunidad.</p>
+        </article>
+        <article class="card">
+          <h3>Comunidad</h3>
+          <p>Mentores, mesas de trabajo y Demo Days ante docentes y expertos.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="numeros">
+      <p class="kicker">Indicadores</p>
+      <h2 class="titulo">El Semillero en números</h2>
+      <p class="lead">Cifras del primer corte de convocatoria (10–20 de agosto de 2026) y estructura del programa. Las visitas se actualizan con este sitio.</p>
+      <div class="grid-4">
+        <div class="stat"><b id="c-inscriptos">0</b><span>Inscriptos en el primer corte</span></div>
+        <div class="stat"><b id="c-lineas">0</b><span>Líneas estratégicas</span></div>
+        <div class="stat"><b id="c-niveles">0</b><span>Niveles de formación</span></div>
+        <div class="stat"><b id="c-visitas">0</b><span>Visitas registradas en el mapa</span></div>
+      </div>
+    </section>
+
+    <section class="panel" id="formacion">
+      <p class="kicker">Trayecto</p>
+      <h2 class="titulo">Cinco niveles. Entrás en el I.</h2>
+      <p class="lead">Avanzás según tu proyecto, no según el año de la carrera.</p>
+      <div class="grid-2">
+        <article class="card level"><div class="badge">I</div><div><h3>Introducción</h3><p>Fundamentos, IA generativa, prompts, datos y ética. Pensado para quien arranca.</p></div></article>
+        <article class="card level"><div class="badge">II</div><div><h3>Desarrollo</h3><p>Python, APIs, agentes, automatización y también plataformas no-code / low-code.</p></div></article>
+        <article class="card level"><div class="badge">III</div><div><h3>Investigación</h3><p>Metodología, revisión sistemática, validación, estadística y redacción científica.</p></div></article>
+        <article class="card level"><div class="badge">IV</div><div><h3>Transferencia</h3><p>Design Thinking, prototipos, propiedad intelectual y vínculo con el medio.</p></div></article>
+        <article class="card level"><div class="badge">V</div><div><h3>Liderazgo</h3><p>Gestión de equipos, congresos, redes y mentoría a nuevos integrantes.</p></div></article>
+        <article class="card goldbar">
+          <h3>Cómo se selecciona</h3>
+          <ul>
+            <li>Interés real por trabajar con IA, no un CV perfecto.</li>
+            <li>Motivación: por qué te importa el problema.</li>
+            <li>Disponibilidad para talleres, mesas y el proyecto.</li>
+            <li>Potencial: la idea puede ser simple.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="convocatoria">
+      <p class="kicker">Convocatoria 2026</p>
+      <h2 class="titulo">Tu lugar en el Semillero está abierto</h2>
+      <p class="lead">Estudiantes regulares de pregrado, grado y posgrado, de cualquier carrera y sede. Becarios de investigación y graduados recientes invitados.</p>
+      <div class="grid-3">
+        <article class="card"><h3>Gratuito y voluntario</h3><p>Entrá por interés y compromiso. No hay examen de programación.</p></article>
+        <article class="card"><h3>Todas las facultades</h3><p>Derecho, salud, económicas, educación, ingeniería, teología: la IA se aplica a tu disciplina.</p></article>
+        <article class="card"><h3>Idea inicial alcanza</h3><p>Si todavía no tenés proyecto, lo definís con tu mentor en la inducción.</p></article>
+      </div>
+      <div class="btn-row" style="margin-top:22px">
+        <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener">Completar inscripción</a>
+        <a class="btn-3d gold" href="https://claudiomlarrea.github.io/observatorio-ia/" data-observatorio target="_blank" rel="noopener">Ir al Observatorio de IA</a>
+      </div>
+    </section>
+
+    <section class="panel" id="lineas">
+      <p class="kicker">Plan estratégico</p>
+      <h2 class="titulo">Seis líneas de trabajo</h2>
+      <p class="lead">Tu idea entra si resuelve un problema real con IA responsable.</p>
+      <div class="grid-3">
+        <article class="card goldbar"><h3>Investigación científica</h3><p>Búsqueda, revisión, datos, minería de textos y redacción asistida con criterio.</p></article>
+        <article class="card goldbar"><h3>Aplicaciones inteligentes</h3><p>Chatbots, agentes, automatizaciones, predicción y sistemas expertos.</p></article>
+        <article class="card goldbar"><h3>Ciencia de datos</h3><p>Captura, análisis, visualización y analítica predictiva.</p></article>
+        <article class="card goldbar"><h3>Desarrollo productivo</h3><p>Agro, ambiente, industria, logística, salud, gestión y territorio.</p></article>
+        <article class="card goldbar"><h3>Ética y gobernanza</h3><p>Derechos digitales, sesgos, privacidad, regulación y transparencia.</p></article>
+        <article class="card goldbar"><h3>Innovación y emprendimiento</h3><p>Prototipos, transferencia, propiedad intelectual y base tecnológica.</p></article>
+      </div>
+    </section>
+
+    <section class="panel" id="visitas">
+      <p class="kicker">Puertas abiertas</p>
+      <h2 class="titulo">Visitas para externos</h2>
+      <p class="lead">Espacio para quienes no cursan en la UCCuyo: otras universidades, organismos, colegios, medios y comunidad. El mapa estima el origen por IP (no identifica personas). El libro de visitas queda en este navegador hasta que el sitio tenga servidor institucional.</p>
+
+      <div class="banner-you" id="banner-you"></div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="stat"><b id="n-todas">0</b><span>Visitas en el mapa</span></div>
+        <div class="stat"><b id="n-ext">0</b><span>Externas</span></div>
+        <div class="stat"><b id="n-int">0</b><span>UCCuyo / Cuyo</span></div>
+        <div class="stat"><b>libro</b><span>Dejá tu marca abajo</span></div>
+      </div>
+
+      <div class="filters">
+        <button class="filter on" type="button" data-filtro="todas">Todas</button>
+        <button class="filter" type="button" data-filtro="externa">Solo externas</button>
+        <button class="filter" type="button" data-filtro="interna">Solo UCCuyo / Cuyo</button>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div id="map" role="img" aria-label="Mapa de origen de visitas"></div>
+          <p class="lead" style="margin-top:10px;font-size:13px">Tocá un origen en la lista para enfocarlo. Redes móviles, VPN y campus pueden desplazar la ubicación estimada.</p>
+        </div>
+        <div>
+          <h3 class="kicker" style="margin-bottom:8px">Ranking de orígenes</h3>
+          <ul class="origin-list" id="origenes"></ul>
+        </div>
+      </div>
+
+      <article class="card goldbar" style="margin-top:22px">
+        <h3>Libro de visitas para externos</h3>
+        <p>Si venís de otra institución, registrá la visita. Sirve para coordinar un recorrido, una charla o una vinculación con el Observatorio.</p>
+        <form class="visit" id="form-visita">
+          <label>Nombre y apellido
+            <input name="nombre" required placeholder="María Pérez" />
+          </label>
+          <label>Institución
+            <input name="institucion" required placeholder="Universidad / organismo / colegio" />
+          </label>
+          <label>Tipo de visita
+            <select name="tipo" id="campo-tipo">
+              <option value="externa">Externa (fuera de la UCCuyo)</option>
+              <option value="interna">Interna (UCCuyo)</option>
+            </select>
+          </label>
+          <label>Motivo
+            <select name="motivo">
+              <option>Vinculación institucional</option>
+              <option>Investigación</option>
+              <option>Estudiante visitante</option>
+              <option>Medios / prensa</option>
+              <option>Colegio / escuela</option>
+              <option>Otra</option>
+            </select>
+          </label>
+          <label class="full">Ciudad o origen
+            <input name="lugar" id="campo-lugar" placeholder="Se completa solo si la geolocalización responde" />
+          </label>
+          <label class="full">Mensaje
+            <textarea name="mensaje" rows="3" placeholder="Qué te interesa ver o con quién querés hablar"></textarea>
+          </label>
+          <div class="full btn-row">
+            <button class="btn-3d" type="submit">Registrar visita</button>
+            <a class="btn-3d gold" href="mailto:observatorioia@uccuyo.edu.ar?subject=Visita%20externa%20SIA-UCCuyo">Pedir recorrido por mail</a>
+          </div>
+          <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700">Visita anotada en el libro de este dispositivo.</p>
+        </form>
+        <div class="book" id="libro"></div>
+      </article>
+    </section>
+
+    <section class="panel" id="galeria">
+      <p class="kicker">Comunidad</p>
+      <h2 class="titulo">Galería</h2>
+      <p class="lead">Registro de encuentros, talleres y actividades del Observatorio y del Semillero.</p>
+      <div class="gallery">
+        <img src="assets/photo_team.jpg" alt="Equipo en actividad" />
+        <img src="assets/photo_class.jpg" alt="Taller en aula" />
+        <img src="assets/photo_demo.jpg" alt="Demo day" />
+        <img src="assets/photo_net.jpg" alt="Red de trabajo" />
+        <img src="assets/photo_cta.jpg" alt="Convocatoria" />
+      </div>
+    </section>
+
+    <section class="panel" id="contacto">
+      <p class="kicker">Contacto</p>
+      <h2 class="titulo">Escribinos</h2>
+      <p class="lead">Consultas, propuestas de colaboración o pedidos de visita. Se abre tu correo con el destinatario ya cargado.</p>
+      <div class="grid-2">
+        <article class="card goldbar">
+          <h3>Observatorio de IA</h3>
+          <p>observatorioia@uccuyo.edu.ar</p>
+          <p>Secretaría de Investigación y Vinculación Tecnológica · Universidad Católica de Cuyo</p>
+          <div class="btn-row" style="margin-top:14px">
+            <a class="btn-3d" href="mailto:observatorioia@uccuyo.edu.ar">Enviar correo</a>
+            <a class="btn-3d gold" data-inscripcion href="#" target="_blank" rel="noopener">Inscripción estudiantes</a>
+          </div>
+        </article>
+        <article class="card">
+          <h3>También en el Observatorio</h3>
+          <p>Jornadas de IA, webinars, biblioteca, encuestas e informes viven en el sitio institucional del Observatorio. Este portal es la puerta del Semillero y de las visitas externas.</p>
+          <div class="btn-row" style="margin-top:14px">
+            <a class="btn-3d" data-observatorio href="https://claudiomlarrea.github.io/observatorio-ia/" target="_blank" rel="noopener">Abrir Observatorio de IA</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <p><strong>SIA-UCCuyo</strong> · Semillero de Inteligencia Artificial</p>
+    <p>Identidad visual según el Manual de Normas UCCuyo 1.0 (2017): verde institucional #064A31, bordeaux #7D1B1C y oro #E38A00. Tipografías Droid Serif y Montserrat.</p>
+    <p>Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por ipapi.co.</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
