@@ -65,6 +65,10 @@ function upsertVisit_(st, rec) {
     if (rec.tipo) found.tipo = rec.tipo;
     if (rec.lat) found.lat = rec.lat;
     if (rec.lon) found.lon = rec.lon;
+    if (rec.country) found.country = rec.country;
+    if (rec.countryName) found.countryName = rec.countryName;
+    if (rec.region) found.region = rec.region;
+    if (rec.city) found.city = rec.city;
   } else {
     st.visitas.push({
       id: id,
@@ -74,7 +78,9 @@ function upsertVisit_(st, rec) {
       n: 1,
       tipo: rec.tipo || "externa",
       country: rec.country || "",
-      region: rec.region || ""
+      countryName: rec.countryName || "",
+      region: rec.region || "",
+      city: rec.city || ""
     });
   }
 }
@@ -125,7 +131,9 @@ function handle_(e) {
         lon: Number(p.lon) || 0,
         tipo: tipo,
         country: String(p.country || ""),
-        region: region
+        countryName: String(p.countryName || country),
+        region: region,
+        city: city
       });
       save_(st);
       return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);

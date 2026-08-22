@@ -192,7 +192,7 @@
     <section class="panel" id="visitas">
       <p class="kicker" data-i18n="sec.vis.kicker">Puertas abiertas</p>
       <h2 class="titulo" data-i18n="sec.vis.title">Visitas para externos</h2>
-      <p class="lead" data-i18n="sec.vis.lead">Todas las personas ven el mismo mapa, el mismo ranking y los mismos contadores (backend compartido). La geolocalización estima país y región; no se guarda la dirección IP.</p>
+      <p class="lead" data-i18n="sec.vis.lead">Todas las personas ven el mismo mapa, el mismo ranking y los mismos contadores. Los orígenes se separan en países y en provincias o regiones; cada lista muestra 6 ítems y se puede desplegar. La geolocalización no guarda la IP.</p>
 
       <div class="banner-you" id="banner-you"></div>
 
@@ -214,9 +214,17 @@
           <div id="map" role="img" aria-label="Mapa de origen de visitas"></div>
           <p class="lead" style="margin-top:10px;font-size:13px" data-i18n="sec.vis.mapnote">Tocá un origen en la lista para enfocarlo. Redes móviles, VPN y campus pueden desplazar la ubicación estimada. No se almacena la IP.</p>
         </div>
-        <div>
-          <h3 class="kicker" style="margin-bottom:8px" data-i18n="sec.vis.rank">Ranking de orígenes</h3>
-          <ul class="origin-list" id="origenes"></ul>
+        <div class="rank-panels">
+          <div class="rank-block">
+            <h3 class="kicker" data-i18n="sec.vis.paises">Países</h3>
+            <ul class="origin-list" id="ranking-paises"></ul>
+            <button class="rank-more" type="button" data-rank-more="paises" hidden></button>
+          </div>
+          <div class="rank-block">
+            <h3 class="kicker" data-i18n="sec.vis.regiones">Provincias y regiones</h3>
+            <ul class="origin-list" id="ranking-regiones"></ul>
+            <button class="rank-more" type="button" data-rank-more="regiones" hidden></button>
+          </div>
         </div>
       </div>
 
@@ -259,6 +267,7 @@
           <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700" data-i18n="sec.vis.ok">Visita anotada en el libro compartido.</p>
         </form>
         <div class="book" id="libro"></div>
+        <button class="rank-more" type="button" data-rank-more="libro" hidden></button>
       </article>
     </section>
 

@@ -35,7 +35,32 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const tt = (key, fallback, vars) =>
   window.I18N && window.I18N.t ? window.I18N.t(key, vars) : fallback;
 
+const COUNTRY_LABELS = {
+  AR: "Argentina",
+  CL: "Chile",
+  ES: "España",
+  UY: "Uruguay",
+  BR: "Brasil",
+  US: "Estados Unidos",
+  MX: "México",
+  PE: "Perú",
+  CO: "Colombia",
+  FR: "Francia",
+  IT: "Italia",
+  DE: "Alemania",
+  PY: "Paraguay",
+  BO: "Bolivia",
+  EC: "Ecuador",
+  VE: "Venezuela",
+  GB: "Reino Unido",
+  PT: "Portugal",
+  CA: "Canadá",
+  CN: "China",
+};
+
+const RANK_LIMIT = 6;
 let map, markersLayer, visitas = [], libro = [], filtro = "todas";
+let rankOpen = { paises: false, regiones: false, libro: false };
 
 function cfg() {
   return window.SIA_CONFIG || {};
@@ -141,36 +166,129 @@ function coordsFor(row) {
   return [-34.6, -64.0];
 }
 
-function renderRanking() {
-  var ul = $("#origenes");
-  if (!ul) return;
-  var rows = visitas
-    .filter(function (r) { return filtro === "todas" || r.tipo === filtro; })
+function originParts(row) {
+  var code = String(row.country || "").trim().toUpperCase();
+  var country = String(row.countryName || "").trim();
+  var region = String(row.region || "").trim();
+  if ((!country || !region) && row.lugar) {
+    var bits = String(row.lugar).split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!country && bits.length) country = bits[bits.length - 1];
+    if (!region && bits.length >= 2) region = bits[bits.length - 2];
+  }
+  if (!country && COUNTRY_LABELS[code]) country = COUNTRY_LABELS[code];
+  if (!country) country = tt("sec.vis.nopais", "Sin país");
+  if (!region) region = tt("sec.vis.noregion", "Sin provincia / región");
+  return { code: code, country: country, region: region };
+}
+
+function filteredVisitas() {
+  return visitas.filter(function (r) { return filtro === "todas" || r.tipo === filtro; });
+}
+
+function groupRanking(rows, keyFn, labelFn) {
+  var bag = {};
+  rows.forEach(function (r) {
+    var parts = originParts(r);
+    var key = keyFn(r, parts);
+    if (!bag[key]) {
+      bag[key] = {
+        id: key,
+        n: 0,
+        lat: 0,
+        lon: 0,
+        tipo: r.tipo === "interna" ? "interna" : "externa",
+        label: labelFn(r, parts),
+        sample: r,
+      };
+    }
+    bag[key].n += Number(r.n) || 0;
+    if (r.tipo === "interna") bag[key].tipo = "interna";
+    if (r.lat && r.lon) {
+      bag[key].lat = r.lat;
+      bag[key].lon = r.lon;
+      bag[key].sample = r;
+    }
+  });
+  return Object.keys(bag)
+    .map(function (k) { return bag[k]; })
     .sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
-  ul.innerHTML = rows.map(function (r) {
+}
+
+function setMoreButton(key, total) {
+  var btn = document.querySelector('[data-rank-more="' + key + '"]');
+  if (!btn) return;
+  var extra = total - RANK_LIMIT;
+  if (extra <= 0) {
+    btn.hidden = true;
+    rankOpen[key] = false;
+    return;
+  }
+  btn.hidden = false;
+  btn.textContent = rankOpen[key]
+    ? tt("sec.vis.less", "Ver menos")
+    : tt("sec.vis.more", "Ver más ({n})", { n: extra });
+}
+
+function renderCollapsedList(ul, items, kind) {
+  if (!ul) return;
+  if (!items.length) {
+    ul.innerHTML = '<li class="empty">' + escapeHtml(tt("sec.vis.empty", "Todavía no hay orígenes en el mapa compartido.")) + "</li>";
+    return;
+  }
+  var open = rankOpen[kind];
+  var shown = open ? items : items.slice(0, RANK_LIMIT);
+  ul.innerHTML = shown.map(function (r) {
     var tag = r.tipo === "interna" ? "interna" : "externa";
+    var sub = r.sub ? '<span class="sub">' + escapeHtml(r.sub) + "</span>" : "";
     return (
-      '<li data-id="' + r.id + '">' +
-      "<span><strong>" + escapeHtml(r.lugar) + "</strong><br>" +
+      '<li data-kind="' + kind + '" data-id="' + escapeHtml(r.id) + '">' +
+      "<span><strong>" + escapeHtml(r.label) + "</strong>" + sub +
       '<span class="tag ' + (tag === "externa" ? "ext" : "int") + '">' +
       tt("tag." + tag, tag) + "</span></span><b>" + (r.n || 0) + "</b></li>"
     );
   }).join("");
-  $$("#origenes li").forEach(function (li) {
+  $$("li[data-id]", ul).forEach(function (li) {
     li.addEventListener("click", function () {
-      $$("#origenes li").forEach(function (x) { x.classList.remove("on"); });
+      $$(".origin-list li").forEach(function (x) { x.classList.remove("on"); });
       li.classList.add("on");
-      var row = visitas.find(function (v) { return v.id === li.dataset.id; });
+      var row = items.find(function (v) { return v.id === li.dataset.id; });
       if (row && map) {
-        var ll = coordsFor(row);
-        map.setView(ll, 6);
+        var ll = coordsFor(row.sample || row);
+        map.setView(ll, kind === "paises" ? 4 : 6);
       }
     });
   });
+}
+
+function countryKey(parts) {
+  if (parts.code && COUNTRY_LABELS[parts.code]) return parts.code;
+  return String(parts.country || "").toLowerCase();
+}
+
+function renderRanking() {
+  var rows = filteredVisitas();
+  var paises = groupRanking(
+    rows,
+    function (_r, p) { return "pais:" + countryKey(p); },
+    function (_r, p) { return p.country; }
+  );
+  var regiones = groupRanking(
+    rows,
+    function (_r, p) { return "reg:" + countryKey(p) + "|" + String(p.region || "").toLowerCase(); },
+    function (_r, p) { return p.region; }
+  ).map(function (item) {
+    var parts = originParts(item.sample || {});
+    item.sub = parts.country;
+    return item;
+  });
+  renderCollapsedList($("#ranking-paises"), paises, "paises");
+  renderCollapsedList($("#ranking-regiones"), regiones, "regiones");
+  setMoreButton("paises", paises.length);
+  setMoreButton("regiones", regiones.length);
   var t = totals(visitas);
-  $("#n-todas").textContent = t.todas;
-  $("#n-ext").textContent = t.externa;
-  $("#n-int").textContent = t.interna;
+  if ($("#n-todas")) $("#n-todas").textContent = t.todas;
+  if ($("#n-ext")) $("#n-ext").textContent = t.externa;
+  if ($("#n-int")) $("#n-int").textContent = t.interna;
 }
 
 function escapeHtml(s) {
@@ -203,7 +321,8 @@ function renderLibro() {
   var box = $("#libro");
   if (!box) return;
   var rows = libro.slice().reverse();
-  box.innerHTML = rows.map(function (n) {
+  var shown = rankOpen.libro ? rows : rows.slice(0, RANK_LIMIT);
+  box.innerHTML = shown.map(function (n) {
     var lugar = n.lugar ? " · " + escapeHtml(n.lugar) : "";
     return (
       '<article class="note"><strong>' + escapeHtml(n.nombre) + "</strong> · " +
@@ -213,6 +332,7 @@ function renderLibro() {
       "</small><p>" + escapeHtml(n.mensaje) + "</p></article>"
     );
   }).join("");
+  setMoreButton("libro", rows.length);
 }
 
 function geoPayload(geo) {
@@ -354,6 +474,14 @@ function initForm() {
       $$(".filter").forEach(function (b) { b.classList.toggle("on", b === btn); });
       renderRanking();
       drawMarkers();
+    });
+  });
+  $$("[data-rank-more]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-rank-more");
+      rankOpen[key] = !rankOpen[key];
+      if (key === "libro") renderLibro();
+      else renderRanking();
     });
   });
 }
