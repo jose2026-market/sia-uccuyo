@@ -412,14 +412,31 @@ h2.titulo {
 }
 .origin-list li:last-child { border-bottom: 0; }
 .origin-list li:hover, .origin-list li.on { background: #fff4e0; }
+.origin-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.origin-copy strong {
+  display: block;
+  line-height: 1.25;
+}
+.origin-list .sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
 .origin-list .tag {
+  display: block;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .04em;
   text-transform: uppercase;
+  margin: 0;
 }
-.origin-list .sub { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
-.origin-list .tag { display: inline-block; margin-top: 2px; }
 .origin-list li.empty:hover { background: var(--papel); }
 .origin-list .empty {
   cursor: default;

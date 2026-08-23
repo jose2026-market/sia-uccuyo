@@ -166,12 +166,19 @@ function coordsFor(row) {
   return [-34.6, -64.0];
 }
 
+function stripTipoGlue(s) {
+  return String(s || "")
+    .replace(/\s*(interna|externa|internal|external)\s*$/i, "")
+    .replace(/([a-záéíóúñ])(interna|externa|internal|external)$/i, "$1")
+    .trim();
+}
+
 function originParts(row) {
   var code = String(row.country || "").trim().toUpperCase();
-  var country = String(row.countryName || "").trim();
-  var region = String(row.region || "").trim();
+  var country = stripTipoGlue(row.countryName || "");
+  var region = stripTipoGlue(row.region || "");
   if ((!country || !region) && row.lugar) {
-    var bits = String(row.lugar).split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    var bits = String(row.lugar).split(",").map(function (s) { return stripTipoGlue(s); }).filter(Boolean);
     if (!country && bits.length) country = bits[bits.length - 1];
     if (!region && bits.length >= 2) region = bits[bits.length - 2];
   }
@@ -242,7 +249,7 @@ function renderCollapsedList(ul, items, kind) {
     var sub = r.sub ? '<span class="sub">' + escapeHtml(r.sub) + "</span>" : "";
     return (
       '<li data-kind="' + kind + '" data-id="' + escapeHtml(r.id) + '">' +
-      "<span><strong>" + escapeHtml(r.label) + "</strong>" + sub +
+      '<span class="origin-copy"><strong>' + escapeHtml(r.label) + "</strong>" + sub +
       '<span class="tag ' + (tag === "externa" ? "ext" : "int") + '">' +
       tt("tag." + tag, tag) + "</span></span><b>" + (r.n || 0) + "</b></li>"
     );
