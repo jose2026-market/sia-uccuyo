@@ -230,10 +230,10 @@
 
       <article class="card goldbar" style="margin-top:22px">
         <h3 data-i18n="sec.vis.book">Libro de visitas para externos</h3>
-        <p data-i18n="sec.vis.bookp">Si venís de otra institución, registrá la visita. Se guarda en el mismo backend que el mapa, visible para todas las personas.</p>
+        <p data-i18n="sec.vis.bookp">Si venís de otra institución, registrá la visita. En el sitio se publica la institución y el mensaje, no el nombre ni el correo.</p>
         <form class="visit" id="form-visita">
-          <label><span data-i18n="sec.vis.nombre">Nombre y apellido</span>
-            <input name="nombre" required placeholder="María Pérez" />
+          <label><span data-i18n="sec.vis.nombre">Nombre y apellido (no se publica)</span>
+            <input name="nombre" required autocomplete="name" />
           </label>
           <label><span data-i18n="sec.vis.inst">Institución</span>
             <input name="institucion" required placeholder="Universidad / organismo / colegio" />

@@ -325,8 +325,8 @@ function renderLibro() {
   box.innerHTML = shown.map(function (n) {
     var lugar = n.lugar ? " · " + escapeHtml(n.lugar) : "";
     return (
-      '<article class="note"><strong>' + escapeHtml(n.nombre) + "</strong> · " +
-      escapeHtml(n.institucion) + "<br><small>" + escapeHtml(n.cuando) + " · " +
+      '<article class="note"><strong>' + escapeHtml(n.institucion) + "</strong><br><small>" +
+      escapeHtml(n.cuando) + " · " +
       escapeHtml(n.motivo) + " · " + tt("tag." + (n.tipo === "interna" ? "interna" : "externa"), n.tipo) +
       lugar +
       "</small><p>" + escapeHtml(n.mensaje) + "</p></article>"

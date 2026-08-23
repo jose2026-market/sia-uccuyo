@@ -27,6 +27,27 @@ function getState() {
   }
 }
 
+function publicLibro(rows) {
+  var out = [];
+  var i;
+  for (i = 0; i < (rows || []).length; i++) {
+    var n = rows[i] || {};
+    out.push({
+      institucion: n.institucion || "",
+      tipo: n.tipo || "externa",
+      motivo: n.motivo || "",
+      mensaje: n.mensaje || "",
+      lugar: n.lugar || "",
+      cuando: n.cuando || ""
+    });
+  }
+  return out;
+}
+
+function publicState(st) {
+  return { ok: true, visitas: st.visitas, libro: publicLibro(st.libro) };
+}
+
 function saveState(st) {
   PropertiesService.getScriptProperties().setProperty("SIA_STATE", JSON.stringify(st));
 }
@@ -95,7 +116,7 @@ function handleRequest(e) {
     var st = getState();
 
     if (action === "state") {
-      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      return jsonOut(publicState(st), callback);
     }
 
     if (action === "visitgeo") {
@@ -122,7 +143,7 @@ function handleRequest(e) {
         city: city
       });
       saveState(st);
-      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      return jsonOut(publicState(st), callback);
     }
 
     if (action === "libro") {
@@ -148,7 +169,7 @@ function handleRequest(e) {
         });
       }
       saveState(st);
-      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      return jsonOut(publicState(st), callback);
     }
 
     return jsonOut({ ok: false, error: "unknown_action" }, callback);
