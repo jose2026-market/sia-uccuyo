@@ -120,6 +120,10 @@ function handleRequest(e) {
     }
 
     if (action === "visitgeo") {
+      delete p.ip;
+      delete p.IP;
+      delete p.ipAddress;
+      delete p.query;
       var country = String(p.countryName || p.country || "").trim();
       var region = String(p.region || "").trim();
       var city = String(p.city || "").trim();
@@ -156,18 +160,10 @@ function handleRequest(e) {
         lugar: String(p.lugar || "").trim().slice(0, 160),
         cuando: Utilities.formatDate(new Date(), "America/Argentina/Buenos_Aires", "yyyy-MM-dd")
       };
-      if (!row.nombre || !row.institucion) {
+      if (!row.institucion || !row.mensaje) {
         return jsonOut({ ok: false, error: "incomplete" }, callback);
       }
       st.libro.push(row);
-      if (p.lugar) {
-        upsertVisit(st, {
-          lugar: String(p.lugar),
-          lat: Number(p.lat) || 0,
-          lon: Number(p.lon) || 0,
-          tipo: row.tipo
-        });
-      }
       saveState(st);
       return jsonOut(publicState(st), callback);
     }

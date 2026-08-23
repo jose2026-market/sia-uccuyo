@@ -192,7 +192,7 @@
     <section class="panel" id="visitas">
       <p class="kicker" data-i18n="sec.vis.kicker">Puertas abiertas</p>
       <h2 class="titulo" data-i18n="sec.vis.title">Visitas para externos</h2>
-      <p class="lead" data-i18n="sec.vis.lead">Todas las personas ven el mismo mapa, el mismo ranking y los mismos contadores. Los orígenes se separan en países y en provincias o regiones; cada lista muestra 6 ítems y se puede desplegar. La geolocalización no guarda la IP.</p>
+      <p class="lead" data-i18n="sec.vis.lead">Al abrir esta sección se registra una visita compartida (país y región; no se guarda la IP). El mapa, el ranking y los contadores son los mismos para todas las personas. El libro de visitas es opcional.</p>
 
       <div class="banner-you" id="banner-you"></div>
 
@@ -229,12 +229,9 @@
       </div>
 
       <article class="card goldbar" style="margin-top:22px">
-        <h3 data-i18n="sec.vis.book">Libro de visitas para externos</h3>
-        <p data-i18n="sec.vis.bookp">Si venís de otra institución, registrá la visita. En el sitio se publica la institución y el mensaje, no el nombre ni el correo.</p>
+        <h3 data-i18n="sec.vis.book">Libro de visitas (opcional)</h3>
+        <p data-i18n="sec.vis.bookp">No hace falta para contar la visita. Si querés dejar un mensaje, bastan institución y texto. No se publica el nombre ni el correo.</p>
         <form class="visit" id="form-visita">
-          <label><span data-i18n="sec.vis.nombre">Nombre y apellido (no se publica)</span>
-            <input name="nombre" required autocomplete="name" />
-          </label>
           <label><span data-i18n="sec.vis.inst">Institución</span>
             <input name="institucion" required placeholder="Universidad / organismo / colegio" />
           </label>
@@ -244,27 +241,17 @@
               <option value="interna" data-i18n="sec.vis.tipo.int">Interna (UCCuyo)</option>
             </select>
           </label>
-          <label><span data-i18n="sec.vis.motivo">Motivo</span>
-            <select name="motivo">
-              <option data-i18n="sec.vis.mot.vinc">Vinculación institucional</option>
-              <option data-i18n="sec.vis.mot.inv">Investigación</option>
-              <option data-i18n="sec.vis.mot.est">Estudiante visitante</option>
-              <option data-i18n="sec.vis.mot.med">Medios / prensa</option>
-              <option data-i18n="sec.vis.mot.col">Colegio / escuela</option>
-              <option data-i18n="sec.vis.mot.otra">Otra</option>
-            </select>
-          </label>
           <label class="full"><span data-i18n="sec.vis.lugar">Ciudad o origen</span>
             <input name="lugar" id="campo-lugar" />
           </label>
           <label class="full"><span data-i18n="sec.vis.msg">Mensaje</span>
-            <textarea name="mensaje" rows="3"></textarea>
+            <textarea name="mensaje" rows="3" required></textarea>
           </label>
           <div class="full btn-row">
-            <button class="btn-3d" type="submit" data-i18n="sec.vis.send">Registrar visita</button>
+            <button class="btn-3d" type="submit" data-i18n="sec.vis.send">Dejar mensaje</button>
             <a class="btn-3d gold" href="mailto:observatorioia@uccuyo.edu.ar?subject=Visita%20externa%20SIA-UCCuyo" data-i18n="sec.vis.mail">Pedir recorrido por mail</a>
           </div>
-          <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700" data-i18n="sec.vis.ok">Visita anotada en el libro compartido.</p>
+          <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700" data-i18n="sec.vis.ok">Mensaje anotado en el libro compartido.</p>
         </form>
         <div class="book" id="libro"></div>
         <button class="rank-more" type="button" data-rank-more="libro" hidden></button>

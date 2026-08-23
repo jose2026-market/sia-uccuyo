@@ -114,30 +114,30 @@ function fetchJsonp(url) {
 function fetchApps(action, extra) {
   var url = appsUrl(action, extra);
   if (!url) return Promise.reject(new Error("no-backend"));
-  return fetchJson(url).then(function (data) { return data; }, function () {
-    return fetchJsonp(url);
+  /* Apps Script redirige y a veces falla CORS: JSONP primero, luego fetch. */
+  return fetchJsonp(url).then(function (data) {
+    if (data && data.ok === false && data.error === "invalid_site") throw new Error("invalid_site");
+    return data;
+  }, function () {
+    return fetchJson(url);
   });
 }
 
 function applyState(data) {
-  if (!data || data.ok === false) return;
-  visitas = Array.isArray(data.visitas) ? data.visitas : visitas;
-  libro = Array.isArray(data.libro) ? data.libro : libro;
+  if (!data || data.ok === false) throw new Error((data && data.error) || "bad-state");
+  visitas = Array.isArray(data.visitas) ? data.visitas : [];
+  libro = Array.isArray(data.libro) ? data.libro : [];
   renderRanking();
   drawMarkers();
   renderLibro();
   var t = totals(visitas);
   var c = $("#c-visitas");
   if (c) c.textContent = String(t.todas);
+  return data;
 }
 
 function loadSharedState() {
-  return fetchApps("state")
-    .then(applyState)
-    .catch(function () {
-      var url = (cfg().STATE_URL || "data/state.json") + "?t=" + Date.now();
-      return fetchJson(url).then(applyState);
-    });
+  return fetchApps("state").then(applyState);
 }
 
 function totals(rows) {
@@ -365,44 +365,73 @@ function geoPayload(geo) {
   };
 }
 
+async function pingVisitgeo(g) {
+  var extra =
+    "country=" + encodeURIComponent(g.country || "") +
+    "&countryName=" + encodeURIComponent(g.countryName || "") +
+    "&region=" + encodeURIComponent(g.region || "") +
+    "&city=" + encodeURIComponent(g.city || "") +
+    "&tipo=" + encodeURIComponent(g.tipo || "externa") +
+    "&lat=" + encodeURIComponent(g.lat || 0) +
+    "&lon=" + encodeURIComponent(g.lon || 0);
+  return fetchApps("visitgeo", extra).then(applyState);
+}
+
 async function geolocalizar() {
   var banner = $("#banner-you");
+  var g = {
+    country: "",
+    countryName: "",
+    region: "",
+    city: "",
+    lat: 0,
+    lon: 0,
+    tipo: "externa",
+    lugar: tt("sec.vis.nopais", "Sin país"),
+  };
   try {
     var res = await fetch("https://ipapi.co/json/", { method: "GET" });
-    if (!res.ok) throw new Error("geo");
-    var raw = await res.json();
-    var g = geoPayload(raw);
+    if (res.ok) {
+      var raw = await res.json();
+      if (raw && !raw.error) g = geoPayload(raw);
+    }
+  } catch (_geoErr) {}
+
+  if (banner) {
     banner.classList.add("show");
     banner.innerHTML = tt("sec.vis.you", "Estás visitando desde {lugar} · se registra como visita {tipo} (país y región estimados; no se guarda la IP).", {
       lugar: g.lugar,
       tipo: tt("tag." + g.tipo, g.tipo),
     });
-    if ($("#campo-lugar")) $("#campo-lugar").value = g.lugar;
-    if ($("#campo-tipo")) $("#campo-tipo").value = g.tipo;
-    if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
-    if (!sessionStorage.getItem(GEO_SESSION_KEY)) {
-      var extra =
-        "country=" + encodeURIComponent(g.country) +
-        "&countryName=" + encodeURIComponent(g.countryName) +
-        "&region=" + encodeURIComponent(g.region) +
-        "&city=" + encodeURIComponent(g.city) +
-        "&tipo=" + encodeURIComponent(g.tipo) +
-        "&lat=" + encodeURIComponent(g.lat) +
-        "&lon=" + encodeURIComponent(g.lon);
-      try {
-        await fetchApps("visitgeo", extra).then(applyState);
-      } catch (_be) {
-        /* El mapa sigue mostrando el estado compartido (Apps Script o data/state.json). */
-      }
-      sessionStorage.setItem(GEO_SESSION_KEY, "1");
-    }
-  } catch (_err) {
-    banner.classList.add("show");
-    banner.textContent = tt(
-      "sec.vis.nogeo",
-      "No se pudo estimar el origen. El mapa y el ranking siguen siendo los compartidos. Podés registrar la visita en el libro."
-    );
   }
+  if ($("#campo-lugar")) $("#campo-lugar").value = g.lugar;
+  if ($("#campo-tipo")) $("#campo-tipo").value = g.tipo;
+  if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
+
+  if (sessionStorage.getItem(GEO_SESSION_KEY)) return;
+  try {
+    await pingVisitgeo(g);
+    sessionStorage.setItem(GEO_SESSION_KEY, "1");
+  } catch (_be) {
+    if (banner) {
+      banner.classList.add("show");
+      banner.textContent = tt(
+        "sec.vis.nobackend",
+        "No se pudo guardar la visita en el backend compartido. Recargá la página en unos segundos."
+      );
+    }
+  }
+}
+
+function maybeCountVisit() {
+  var hash = String(location.hash || "").replace(/^#/, "");
+  var section = $("#visitas");
+  var visible = hash === "visitas";
+  if (!visible && section && typeof section.getBoundingClientRect === "function") {
+    var r = section.getBoundingClientRect();
+    visible = r.top < window.innerHeight && r.bottom > 0;
+  }
+  if (visible) geolocalizar();
 }
 
 function initMap() {
@@ -448,23 +477,27 @@ function initForm() {
     ev.preventDefault();
     var fd = new FormData(ev.currentTarget);
     var extra =
-      "nombre=" + encodeURIComponent(String(fd.get("nombre") || "").trim()) +
-      "&institucion=" + encodeURIComponent(String(fd.get("institucion") || "").trim()) +
+      "institucion=" + encodeURIComponent(String(fd.get("institucion") || "").trim()) +
       "&tipo=" + encodeURIComponent(String(fd.get("tipo") || "externa")) +
       "&motivo=" + encodeURIComponent(String(fd.get("motivo") || "Visita")) +
       "&mensaje=" + encodeURIComponent(String(fd.get("mensaje") || "").trim()) +
       "&lugar=" + encodeURIComponent(String(fd.get("lugar") || "").trim());
+    var ok = $("#ok-visita");
     fetchApps("libro", extra)
       .then(applyState)
       .then(function () {
         ev.currentTarget.reset();
-        $("#ok-visita").hidden = false;
+        if (ok) {
+          ok.hidden = false;
+          ok.textContent = tt("sec.vis.ok", "Mensaje anotado en el libro compartido.");
+        }
       })
-      .catch(function () {
-        $("#ok-visita").hidden = false;
-        $("#ok-visita").textContent = tt(
+      .catch(function (err) {
+        if (!ok) return;
+        ok.hidden = false;
+        ok.textContent = tt(
           "sec.vis.nobackend",
-          "Falta publicar el backend (backend/Code.gs). El libro compartido se activa con esa URL /exec."
+          "No se pudo guardar el mensaje en el backend compartido."
         );
       });
   });
@@ -491,7 +524,27 @@ document.addEventListener("DOMContentLoaded", function () {
   initMap();
   initCounters();
   initForm();
-  loadSharedState().then(geolocalizar);
+  loadSharedState()
+    .catch(function () {
+      var banner = $("#banner-you");
+      if (!banner) return;
+      banner.classList.add("show");
+      banner.textContent = tt(
+        "sec.vis.nobackend",
+        "No se pudo leer el backend compartido. Recargá la página."
+      );
+    })
+    .then(function () {
+      maybeCountVisit();
+      var vis = $("#visitas");
+      if (vis && "IntersectionObserver" in window) {
+        var ioVis = new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) maybeCountVisit();
+        }, { threshold: 0.15 });
+        ioVis.observe(vis);
+      }
+    });
+  window.addEventListener("hashchange", maybeCountVisit);
   $$("[data-inscripcion]").forEach(function (a) { a.href = INSCRIPCION; });
   $$("[data-observatorio]").forEach(function (a) { a.href = OBSERVATORIO; });
 });
