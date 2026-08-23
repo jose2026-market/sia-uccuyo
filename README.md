@@ -18,4 +18,6 @@ GitHub Pages es estático. Para que **todas las visitas vean el mismo mapa, el m
 4. Copiá la URL que termina en `/exec` y pegala en `js/config.js` → `APPS_SCRIPT_URL`.
 5. Volvé a publicar este repositorio (commit + push a `main`).
 
+Backend actual: la URL `/exec` ya está cargada en `js/config.js`.
+
 El backend **no guarda la dirección IP**. Solo país, región, ciudad estimada (redondeada) y los datos del libro de visitas que la persona escribe.

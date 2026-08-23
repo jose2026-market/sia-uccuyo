@@ -1,60 +1,53 @@
-/**
- * Backend compartido SIA-UCCuyo (Google Apps Script).
- *
- * Cómo publicarlo (igual que el Observatorio):
- * 1. https://script.google.com → Nuevo proyecto
- * 2. Pegá este archivo. Implementar → Nueva implementación → Aplicación web
- *    Ejecutar como: yo · Quién tiene acceso: Cualquiera
- * 3. Copiá la URL que termina en /exec
- * 4. Pegala en js/config.js → APPS_SCRIPT_URL y volvé a publicar el sitio
- *
- * No guarda IP. Solo país, región, ciudad estimada, y el libro de visitas.
- */
 var SITE = "semillero";
 
-function lock_() {
-  return LockService.getScriptLock();
+function doGet(e) {
+  return handleRequest(e);
 }
 
-function state_() {
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function getState() {
   var raw = PropertiesService.getScriptProperties().getProperty("SIA_STATE");
   if (!raw) {
     return { visitas: [], libro: [] };
   }
   try {
     var o = JSON.parse(raw);
-    if (!o.visitas) o.visitas = [];
-    if (!o.libro) o.libro = [];
+    if (!o.visitas) {
+      o.visitas = [];
+    }
+    if (!o.libro) {
+      o.libro = [];
+    }
     return o;
-  } catch (e) {
+  } catch (err) {
     return { visitas: [], libro: [] };
   }
 }
 
-function save_(st) {
+function saveState(st) {
   PropertiesService.getScriptProperties().setProperty("SIA_STATE", JSON.stringify(st));
 }
 
-function json_(obj, callback) {
+function jsonOut(obj, callback) {
   var body = JSON.stringify(obj);
   if (callback) {
-    return ContentService.createTextOutput(callback + "(" + body + ")")
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return ContentService.createTextOutput(callback + "(" + body + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
 }
 
-function slug_(lugar) {
-  return String(lugar || "origen")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+function slugOf(lugar) {
+  return String(lugar || "origen").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function upsertVisit_(st, rec) {
-  var id = rec.id || slug_(rec.lugar);
+function upsertVisit(st, rec) {
+  var id = rec.id || slugOf(rec.lugar);
   var found = null;
-  for (var i = 0; i < st.visitas.length; i++) {
+  var i;
+  for (i = 0; i < st.visitas.length; i++) {
     if (st.visitas[i].id === id) {
       found = st.visitas[i];
       break;
@@ -85,31 +78,24 @@ function upsertVisit_(st, rec) {
   }
 }
 
-function handle_(e) {
-  var p = (e && e.parameter) || {};
-  /* Nunca persistir IP ni campos equivalentes, aunque lleguen por error. */
-  delete p.ip;
-  delete p.IP;
-  delete p.ipAddress;
-  delete p.ip_address;
-  delete p.query;
-  delete p.address;
-  delete p.clientIp;
-  delete p.remoteAddress;
-
+function handleRequest(e) {
+  var p = {};
+  if (e && e.parameter) {
+    p = e.parameter;
+  }
   var action = String(p.action || "state");
   var callback = p.callback || "";
   if (p.site && String(p.site) !== SITE) {
-    return json_({ ok: false, error: "invalid_site" }, callback);
+    return jsonOut({ ok: false, error: "invalid_site" }, callback);
   }
 
-  var lock = lock_();
+  var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
-    var st = state_();
+    var st = getState();
 
     if (action === "state") {
-      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
     }
 
     if (action === "visitgeo") {
@@ -125,7 +111,7 @@ function handle_(e) {
       if (tipo !== "interna" && tipo !== "externa") {
         tipo = /san luis|san juan|mendoza/i.test(region + " " + city) ? "interna" : "externa";
       }
-      upsertVisit_(st, {
+      upsertVisit(st, {
         lugar: lugar,
         lat: Number(p.lat) || 0,
         lon: Number(p.lon) || 0,
@@ -135,8 +121,8 @@ function handle_(e) {
         region: region,
         city: city
       });
-      save_(st);
-      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      saveState(st);
+      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
     }
 
     if (action === "libro") {
@@ -150,31 +136,23 @@ function handle_(e) {
         cuando: Utilities.formatDate(new Date(), "America/Argentina/Buenos_Aires", "yyyy-MM-dd")
       };
       if (!row.nombre || !row.institucion) {
-        return json_({ ok: false, error: "incomplete" }, callback);
+        return jsonOut({ ok: false, error: "incomplete" }, callback);
       }
       st.libro.push(row);
       if (p.lugar) {
-        upsertVisit_(st, {
+        upsertVisit(st, {
           lugar: String(p.lugar),
           lat: Number(p.lat) || 0,
           lon: Number(p.lon) || 0,
           tipo: row.tipo
         });
       }
-      save_(st);
-      return json_({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
+      saveState(st);
+      return jsonOut({ ok: true, visitas: st.visitas, libro: st.libro }, callback);
     }
 
-    return json_({ ok: false, error: "unknown_action" }, callback);
+    return jsonOut({ ok: false, error: "unknown_action" }, callback);
   } finally {
     lock.releaseLock();
   }
-}
-
-function doGet(e) {
-  return handle_(e);
-}
-
-function doPost(e) {
-  return handle_(e);
 }
