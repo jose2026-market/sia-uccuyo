@@ -362,6 +362,31 @@ h2.titulo {
 .visit-stats { margin-bottom: 18px; }
 .stat.counter b { font-size: 48px; letter-spacing: .04em; }
 
+.scope-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 14px;
+}
+.scope-tab {
+  border: 1px solid var(--linea);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--verde);
+}
+.scope-tab.on {
+  background: var(--verde);
+  color: var(--oro);
+  border-color: var(--verde);
+}
+.scope-board { display: none; }
+.scope-board.on { display: block; }
+.scope-board .lead { margin-top: 4px; }
+
 .level {
   display: grid;
   grid-template-columns: 56px 1fr;

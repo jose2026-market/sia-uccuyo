@@ -29,12 +29,12 @@
     </div>
     <nav class="menu" aria-label="Secciones">
       <a href="#inicio" class="active" data-i18n="nav.inicio">Inicio</a>
+      <a href="#equipo" data-i18n="nav.equipo">Equipo ejecutivo</a>
       <a href="#semillero" data-i18n="nav.semillero">El semillero</a>
-      <a href="#numeros" data-i18n="nav.numeros">En números</a>
+      <a href="#numeros" data-i18n="nav.numeros">El Semillero en números</a>
       <a href="#formacion" data-i18n="nav.formacion">Formación</a>
       <a href="#convocatoria" data-i18n="nav.convocatoria">Convocatoria</a>
       <a href="#lineas" data-i18n="nav.lineas">Líneas de trabajo</a>
-      <a href="#equipo" data-i18n="nav.equipo">Equipo ejecutivo</a>
       <a href="#visitas" data-i18n="nav.visitas">Visitas para externos</a>
       <a href="#galeria" data-i18n="nav.galeria">Galería</a>
       <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
@@ -77,6 +77,25 @@
       </div>
     </section>
 
+    <section class="panel" id="equipo">
+      <p class="kicker" data-i18n="sec.eq.kicker">Personas</p>
+      <h2 class="titulo" data-i18n="sec.eq.title">Equipo ejecutivo</h2>
+      <p class="lead">
+        <span data-i18n="sec.eq.intro">El Observatorio está dirigido por Claudio Larrea Arnau y cuenta con un equipo interdisciplinario orientado a investigación, formación y vinculación institucional en inteligencia artificial. Consultas:</span>
+        <a href="mailto:observatorioia@uccuyo.edu.ar">observatorioia@uccuyo.edu.ar</a>.
+        <a href="https://claudiomlarrea.github.io/observatorio-ia/#equipo" target="_blank" rel="noopener" data-i18n="sec.eq.ver">Ver ficha en el Observatorio de IA</a>.
+      </p>
+      <div class="team-grid">
+        <article class="team-card"><strong>Claudio Larrea Arnau</strong><span data-i18n="sec.eq.dir">Dirección</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>Belén Arias</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>Javier Coria</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>José La Malfa</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>Laura Pizarro</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>Stefania Young</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
+        <article class="team-card"><strong>Frederic Marimon</strong><span data-i18n="sec.eq.asesor">Asesor externo</span><span data-i18n="sec.eq.uic">Universitat Internacional de Catalunya</span></article>
+      </div>
+    </section>
+
     <section class="panel" id="semillero">
       <p class="kicker" data-i18n="sec.sem.kicker">Identidad</p>
       <h2 class="titulo" data-i18n="sec.sem.title">Qué es el Semillero</h2>
@@ -110,13 +129,54 @@
     <section class="panel" id="numeros">
       <p class="kicker" data-i18n="sec.num.kicker">Indicadores</p>
       <h2 class="titulo" data-i18n="sec.num.title">El Semillero en números</h2>
-      <p class="lead" data-i18n="sec.num.lead">Cifras del primer corte de convocatoria (10–20 de agosto de 2026) y estructura del programa. Las visitas se actualizan en un backend compartido, sin guardar IP.</p>
+      <p class="lead" data-i18n="sec.num.lead">Cifras verificables del programa y del alcance de las visitas: provincia, región, país y mundo. Algunas se actualizan solas. No se guarda la IP.</p>
       <div class="grid-4">
-        <div class="stat"><b id="c-inscriptos">0</b><span data-i18n="sec.num.insc">Inscriptos en el primer corte</span></div>
-        <div class="stat"><b id="c-lineas">0</b><span data-i18n="sec.num.lineas">Líneas estratégicas</span></div>
-        <div class="stat"><b id="c-niveles">0</b><span data-i18n="sec.num.niveles">Niveles de formación</span></div>
-        <div class="stat"><b id="c-visitas">0</b><span data-i18n="sec.num.visitas">Visitas registradas en el mapa</span></div>
+        <div class="stat"><b id="c-inscriptos">6</b><span data-i18n="sec.num.insc">Inscriptos en el primer corte</span></div>
+        <div class="stat"><b id="c-lineas">6</b><span data-i18n="sec.num.lineas">Líneas estratégicas</span></div>
+        <div class="stat"><b id="c-niveles">5</b><span data-i18n="sec.num.niveles">Niveles de formación</span></div>
+        <div class="stat"><b id="c-visitas">0</b><span data-i18n="sec.num.visitas">Visitas en el mundo</span></div>
       </div>
+      <div class="scope-tabs" role="tablist" aria-label="Alcance geográfico">
+        <button type="button" class="scope-tab on" role="tab" aria-selected="true" data-scope="provincia" data-i18n="sec.num.tab.prov">Provincia</button>
+        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="region" data-i18n="sec.num.tab.reg">Región</button>
+        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="pais" data-i18n="sec.num.tab.pais">País</button>
+        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="mundo" data-i18n="sec.num.tab.mundo">Mundo</button>
+      </div>
+      <div class="scope-board on" data-scope-panel="provincia">
+        <p class="kicker" data-i18n="sec.num.prov.kicker">San Luis</p>
+        <p class="lead" data-i18n="sec.num.prov.lead">Sede del Semillero. Visitas estimadas con origen en la provincia.</p>
+        <div class="grid-2">
+          <div class="stat"><b id="c-vis-prov">0</b><span data-i18n="sec.num.prov.vis">Visitas desde la provincia</span></div>
+          <div class="stat"><b>1</b><span data-i18n="sec.num.prov.sede">Provincia sede</span></div>
+        </div>
+      </div>
+      <div class="scope-board" data-scope-panel="region">
+        <p class="kicker" data-i18n="sec.num.reg.kicker">Cuyo</p>
+        <p class="lead" data-i18n="sec.num.reg.lead">San Luis, San Juan y Mendoza: la región de la UCCuyo.</p>
+        <div class="grid-3">
+          <div class="stat"><b id="c-vis-reg">0</b><span data-i18n="sec.num.reg.vis">Visitas desde Cuyo</span></div>
+          <div class="stat"><b id="c-vis-reg-n">0</b><span data-i18n="sec.num.reg.n">Provincias de Cuyo con visitas</span></div>
+          <div class="stat"><b>3</b><span data-i18n="sec.num.reg.total">Provincias de la región</span></div>
+        </div>
+      </div>
+      <div class="scope-board" data-scope-panel="pais">
+        <p class="kicker" data-i18n="sec.num.pais.kicker">Argentina</p>
+        <p class="lead" data-i18n="sec.num.pais.lead">Alcance nacional del mapa de visitas del Semillero.</p>
+        <div class="grid-2">
+          <div class="stat"><b id="c-vis-pais">0</b><span data-i18n="sec.num.pais.vis">Visitas desde el país</span></div>
+          <div class="stat"><b id="c-vis-pais-n">0</b><span data-i18n="sec.num.pais.n">Provincias / regiones con visitas</span></div>
+        </div>
+      </div>
+      <div class="scope-board" data-scope-panel="mundo">
+        <p class="kicker" data-i18n="sec.num.mundo.kicker">Mundo</p>
+        <p class="lead" data-i18n="sec.num.mundo.lead">Todas las visitas registradas en el mapa, de cualquier país.</p>
+        <div class="grid-3">
+          <div class="stat"><b id="c-vis-mundo">0</b><span data-i18n="sec.num.mundo.vis">Visitas con origen</span></div>
+          <div class="stat"><b id="c-vis-mundo-paises">0</b><span data-i18n="sec.num.mundo.paises">Países</span></div>
+          <div class="stat"><b id="c-vis-mundo-reg">0</b><span data-i18n="sec.num.mundo.reg">Provincias / regiones</span></div>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:16px" data-i18n="sec.num.ritmo">Ritmo del Semillero: convocatoria abierta, formación en cinco niveles y un prototipo por trayecto.</p>
     </section>
 
     <section class="panel" id="formacion">
@@ -167,25 +227,6 @@
         <article class="card goldbar"><h3 data-i18n="sec.li.l4">Desarrollo productivo</h3><p data-i18n="sec.li.l4.p">Agro, ambiente, industria, logística, salud, gestión y territorio.</p></article>
         <article class="card goldbar"><h3 data-i18n="sec.li.l5">Ética y gobernanza</h3><p data-i18n="sec.li.l5.p">Derechos digitales, sesgos, privacidad, regulación y transparencia.</p></article>
         <article class="card goldbar"><h3 data-i18n="sec.li.l6">Innovación y emprendimiento</h3><p data-i18n="sec.li.l6.p">Prototipos, transferencia, propiedad intelectual y base tecnológica.</p></article>
-      </div>
-    </section>
-
-    <section class="panel" id="equipo">
-      <p class="kicker" data-i18n="sec.eq.kicker">Personas</p>
-      <h2 class="titulo" data-i18n="sec.eq.title">Equipo ejecutivo</h2>
-      <p class="lead">
-        <span data-i18n="sec.eq.intro">El Observatorio está dirigido por Claudio Larrea Arnau y cuenta con un equipo interdisciplinario orientado a investigación, formación y vinculación institucional en inteligencia artificial. Consultas:</span>
-        <a href="mailto:observatorioia@uccuyo.edu.ar">observatorioia@uccuyo.edu.ar</a>.
-        <a href="https://claudiomlarrea.github.io/observatorio-ia/#equipo" target="_blank" rel="noopener" data-i18n="sec.eq.ver">Ver ficha en el Observatorio de IA</a>.
-      </p>
-      <div class="team-grid">
-        <article class="team-card"><strong>Claudio Larrea Arnau</strong><span data-i18n="sec.eq.dir">Dirección</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>Belén Arias</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>Javier Coria</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>José La Malfa</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>Laura Pizarro</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>Stefania Young</strong><span data-i18n="sec.eq.ejec">Equipo ejecutivo</span><span data-i18n="sec.eq.uccuyo">Universidad Católica de Cuyo</span></article>
-        <article class="team-card"><strong>Frederic Marimon</strong><span data-i18n="sec.eq.asesor">Asesor externo</span><span data-i18n="sec.eq.uic">Universitat Internacional de Catalunya</span></article>
       </div>
     </section>
 

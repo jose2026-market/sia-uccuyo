@@ -181,7 +181,8 @@ function applyState(data) {
   renderLibro();
   var t = totals(visitas);
   var c = $("#c-visitas");
-  if (c) c.textContent = String(t.todas);
+  if (c) c.textContent = formatNum(t.todas);
+  updateNumeros();
   return data;
 }
 
@@ -195,6 +196,63 @@ function totals(rows) {
     t.todas += Number(r.n) || 0;
   });
   return t;
+}
+
+function formatNum(n) {
+  return String(Number(n) || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function setNum(id, n) {
+  var el = $(id);
+  if (el) el.textContent = formatNum(n);
+}
+
+function visitScopeStats(rows) {
+  var CUYO = { "san luis": 1, "san juan": 1, mendoza: 1 };
+  var out = { mundo: 0, pais: 0, region: 0, provincia: 0, nPaises: 0, nRegiones: 0, nAr: 0, nCuyo: 0 };
+  var countries = {};
+  var regions = {};
+  var arRegs = {};
+  var cuyoRegs = {};
+  var noPais = foldName(tt("sec.vis.nopais", "Sin país"));
+  var noReg = foldName(tt("sec.vis.noregion", "Sin provincia / región"));
+  (rows || []).forEach(function (r) {
+    var n = Number(r.n) || 0;
+    var p = originParts(r);
+    out.mundo += n;
+    var ck = countryKey(p);
+    if (foldName(p.country) !== noPais) countries[ck || foldName(p.country)] = 1;
+    var rk = foldName(p.region);
+    if (rk && rk !== noReg) regions[(ck || "x") + "|" + rk] = 1;
+    var isAr = p.code === "AR" || foldName(p.country) === "argentina";
+    if (isAr) {
+      out.pais += n;
+      if (rk && rk !== noReg) arRegs[rk] = 1;
+      if (CUYO[rk]) {
+        out.region += n;
+        cuyoRegs[rk] = 1;
+      }
+      if (rk === "san luis") out.provincia += n;
+    }
+  });
+  out.nPaises = Object.keys(countries).length;
+  out.nRegiones = Object.keys(regions).length;
+  out.nAr = Object.keys(arRegs).length;
+  out.nCuyo = Object.keys(cuyoRegs).length;
+  return out;
+}
+
+function updateNumeros() {
+  var s = visitScopeStats(visitas);
+  setNum("#c-visitas", s.mundo);
+  setNum("#c-vis-prov", s.provincia);
+  setNum("#c-vis-reg", s.region);
+  setNum("#c-vis-reg-n", s.nCuyo);
+  setNum("#c-vis-pais", s.pais);
+  setNum("#c-vis-pais-n", s.nAr);
+  setNum("#c-vis-mundo", s.mundo);
+  setNum("#c-vis-mundo-paises", s.nPaises);
+  setNum("#c-vis-mundo-reg", s.nRegiones);
 }
 
 function foldName(s) {
@@ -408,9 +466,9 @@ function renderRanking() {
   setCountLabel("#n-paises", paises.length);
   setCountLabel("#n-regiones", regiones.length);
   var t = totals(visitas);
-  if ($("#n-todas")) $("#n-todas").textContent = t.todas;
-  if ($("#c-visitas")) $("#c-visitas").textContent = t.todas;
-  if ($("#n-libro")) $("#n-libro").textContent = libro.length;
+  if ($("#n-todas")) $("#n-todas").textContent = formatNum(t.todas);
+  if ($("#n-libro")) $("#n-libro").textContent = formatNum(libro.length);
+  updateNumeros();
 }
 
 function escapeHtml(s) {
@@ -611,7 +669,24 @@ function initCounters() {
   [["#c-inscriptos", 6], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
     var el = $(pair[0]);
     if (!el) return;
-    el.textContent = String(pair[1]);
+    el.textContent = formatNum(pair[1]);
+  });
+  updateNumeros();
+}
+
+function initScopeTabs() {
+  $$(".scope-tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var scope = btn.getAttribute("data-scope");
+      $$(".scope-tab").forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      $$("[data-scope-panel]").forEach(function (panel) {
+        panel.classList.toggle("on", panel.getAttribute("data-scope-panel") === scope);
+      });
+    });
   });
 }
 
@@ -658,6 +733,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initNav();
   initMap();
   initCounters();
+  initScopeTabs();
   initForm();
   loadSharedState()
     .catch(function () {
@@ -687,4 +763,5 @@ document.addEventListener("DOMContentLoaded", function () {
 window.addEventListener("sia:langchange", function () {
   renderRanking();
   renderLibro();
+  updateNumeros();
 });
