@@ -21,13 +21,62 @@ const AR_REGIONS = {
   "san luis": [-66.34, -33.3],
   "san juan": [-68.54, -31.54],
   mendoza: [-68.85, -32.89],
-  "buenos aires": [-58.38, -34.6],
+  "buenos aires": [-60.7, -36.7],
+  "ciudad autonoma de buenos aires": [-58.38, -34.6],
+  caba: [-58.38, -34.6],
+  "capital federal": [-58.38, -34.6],
+  "buenos aires f d": [-58.38, -34.6],
+  "buenos aires fd": [-58.38, -34.6],
   cordoba: [-64.19, -31.42],
-  córdoba: [-64.19, -31.42],
   "santa fe": [-60.7, -31.6],
   tucuman: [-65.22, -26.82],
-  tucumán: [-65.22, -26.82],
   salta: [-65.41, -24.79],
+  catamarca: [-65.78, -28.47],
+  chaco: [-60.45, -26.8],
+  chubut: [-68.0, -43.8],
+  corrientes: [-58.83, -27.47],
+  "entre rios": [-59.0, -32.0],
+  formosa: [-58.18, -26.18],
+  jujuy: [-65.3, -23.32],
+  "la pampa": [-64.3, -36.6],
+  "la rioja": [-66.86, -29.41],
+  misiones: [-54.57, -26.92],
+  neuquen: [-68.06, -38.95],
+  "rio negro": [-67.2, -40.8],
+  "santa cruz": [-69.2, -48.8],
+  "santiago del estero": [-64.26, -27.78],
+  "tierra del fuego": [-67.0, -54.3],
+};
+
+const AR_PROVINCE_LABELS = {
+  "buenos aires": "Buenos Aires",
+  "ciudad autonoma de buenos aires": "CABA",
+  caba: "CABA",
+  "capital federal": "CABA",
+  "buenos aires f d": "CABA",
+  "buenos aires fd": "CABA",
+  catamarca: "Catamarca",
+  chaco: "Chaco",
+  chubut: "Chubut",
+  cordoba: "Córdoba",
+  corrientes: "Corrientes",
+  "entre rios": "Entre Ríos",
+  formosa: "Formosa",
+  jujuy: "Jujuy",
+  "la pampa": "La Pampa",
+  "la rioja": "La Rioja",
+  mendoza: "Mendoza",
+  misiones: "Misiones",
+  neuquen: "Neuquén",
+  "rio negro": "Río Negro",
+  salta: "Salta",
+  "san juan": "San Juan",
+  "san luis": "San Luis",
+  "santa cruz": "Santa Cruz",
+  "santa fe": "Santa Fe",
+  "santiago del estero": "Santiago del Estero",
+  "tierra del fuego": "Tierra del Fuego",
+  tucuman: "Tucumán",
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -59,8 +108,8 @@ const COUNTRY_LABELS = {
 };
 
 const RANK_LIMIT = 6;
-let map, markersLayer, visitas = [], libro = [], filtro = "todas";
-let rankOpen = { paises: false, regiones: false, libro: false };
+let map, markersLayer, visitas = [], libro = [];
+let rankOpen = { libro: false };
 
 function cfg() {
   return window.SIA_CONFIG || {};
@@ -141,26 +190,75 @@ function loadSharedState() {
 }
 
 function totals(rows) {
-  var t = { todas: 0, interna: 0, externa: 0 };
+  var t = { todas: 0 };
   (rows || []).forEach(function (r) {
     t.todas += Number(r.n) || 0;
-    t[r.tipo === "interna" ? "interna" : "externa"] += Number(r.n) || 0;
   });
   return t;
 }
 
+function foldName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function provinceLabel(s) {
+  var k = foldName(s);
+  return AR_PROVINCE_LABELS[k] || "";
+}
+
+function countryLabelFromName(s) {
+  var k = foldName(s);
+  var map = {
+    argentina: "Argentina",
+    chile: "Chile",
+    espana: "España",
+    spain: "España",
+    uruguay: "Uruguay",
+    brasil: "Brasil",
+    brazil: "Brasil",
+    "estados unidos": "Estados Unidos",
+    "united states": "Estados Unidos",
+    mexico: "México",
+    peru: "Perú",
+    colombia: "Colombia",
+    francia: "Francia",
+    france: "Francia",
+    italia: "Italia",
+    alemania: "Alemania",
+    germany: "Alemania",
+    paraguay: "Paraguay",
+    bolivia: "Bolivia",
+    ecuador: "Ecuador",
+    venezuela: "Venezuela",
+    "reino unido": "Reino Unido",
+    portugal: "Portugal",
+    canada: "Canadá",
+    china: "China",
+  };
+  return map[k] || "";
+}
+
 function coordsFor(row) {
   if (row.lat && row.lon) return [row.lat, row.lon];
-  var reg = String(row.region || row.lugar || "").toLowerCase();
+  var reg = foldName(row.region || row.lugar || "");
+  var best = "";
   for (var k in AR_REGIONS) {
-    if (reg.indexOf(k) >= 0) {
-      var a = AR_REGIONS[k];
-      return [a[1], a[0]];
+    if (reg === k || (k && reg.indexOf(k) >= 0)) {
+      if (k.length > best.length) best = k;
     }
   }
-  var cc = String(row.country || "").toUpperCase();
-  if (CENTROIDS[cc]) {
-    var c = CENTROIDS[cc];
+  if (best) {
+    var a = AR_REGIONS[best];
+    return [a[1], a[0]];
+  }
+  var parts = originParts(row);
+  if (CENTROIDS[parts.code]) {
+    var c = CENTROIDS[parts.code];
     return [c[1], c[0]];
   }
   return [-34.6, -64.0];
@@ -175,12 +273,44 @@ function stripTipoGlue(s) {
 
 function originParts(row) {
   var code = String(row.country || "").trim().toUpperCase();
+  if (code.length !== 2 || !/^[A-Z]{2}$/.test(code)) code = "";
   var country = stripTipoGlue(row.countryName || "");
   var region = stripTipoGlue(row.region || "");
+  var city = stripTipoGlue(row.city || "");
+  var named = countryLabelFromName(country);
+  var asProvince = provinceLabel(country);
+
+  if (named) country = named;
+  if (asProvince) {
+    if (!provinceLabel(region)) region = asProvince;
+    country = "Argentina";
+    code = "AR";
+  }
+  if (COUNTRY_LABELS[code]) country = COUNTRY_LABELS[code];
+
   if ((!country || !region) && row.lugar) {
     var bits = String(row.lugar).split(",").map(function (s) { return stripTipoGlue(s); }).filter(Boolean);
-    if (!country && bits.length) country = bits[bits.length - 1];
-    if (!region && bits.length >= 2) region = bits[bits.length - 2];
+    var last = bits.length ? bits[bits.length - 1] : "";
+    var prev = bits.length >= 2 ? bits[bits.length - 2] : "";
+    if (!country) {
+      if (countryLabelFromName(last)) country = countryLabelFromName(last);
+      else if (provinceLabel(last)) {
+        country = "Argentina";
+        code = "AR";
+        if (!region) region = provinceLabel(last);
+      } else country = last;
+    }
+    if (!region) {
+      if (provinceLabel(prev)) region = provinceLabel(prev);
+      else if (provinceLabel(last)) region = provinceLabel(last);
+      else region = prev;
+    }
+  }
+  if (provinceLabel(region)) region = provinceLabel(region);
+  if (!region && provinceLabel(city)) region = provinceLabel(city);
+  if ((code === "AR" || countryLabelFromName(country) === "Argentina") && !country) {
+    country = "Argentina";
+    code = "AR";
   }
   if (!country && COUNTRY_LABELS[code]) country = COUNTRY_LABELS[code];
   if (!country) country = tt("sec.vis.nopais", "Sin país");
@@ -189,7 +319,7 @@ function originParts(row) {
 }
 
 function filteredVisitas() {
-  return visitas.filter(function (r) { return filtro === "todas" || r.tipo === filtro; });
+  return visitas;
 }
 
 function groupRanking(rows, keyFn, labelFn) {
@@ -203,13 +333,11 @@ function groupRanking(rows, keyFn, labelFn) {
         n: 0,
         lat: 0,
         lon: 0,
-        tipo: r.tipo === "interna" ? "interna" : "externa",
         label: labelFn(r, parts),
         sample: r,
       };
     }
     bag[key].n += Number(r.n) || 0;
-    if (r.tipo === "interna") bag[key].tipo = "interna";
     if (r.lat && r.lon) {
       bag[key].lat = r.lat;
       bag[key].lon = r.lon;
@@ -221,19 +349,10 @@ function groupRanking(rows, keyFn, labelFn) {
     .sort(function (a, b) { return (b.n || 0) - (a.n || 0); });
 }
 
-function setMoreButton(key, total) {
-  var btn = document.querySelector('[data-rank-more="' + key + '"]');
-  if (!btn) return;
-  var extra = total - RANK_LIMIT;
-  if (extra <= 0) {
-    btn.hidden = true;
-    rankOpen[key] = false;
-    return;
-  }
-  btn.hidden = false;
-  btn.textContent = rankOpen[key]
-    ? tt("sec.vis.less", "Ver menos")
-    : tt("sec.vis.more", "Ver más ({n})", { n: extra });
+function setCountLabel(id, n) {
+  var el = $(id);
+  if (!el) return;
+  el.textContent = n ? "(" + n + ")" : "";
 }
 
 function renderCollapsedList(ul, items, kind) {
@@ -242,16 +361,12 @@ function renderCollapsedList(ul, items, kind) {
     ul.innerHTML = '<li class="empty">' + escapeHtml(tt("sec.vis.empty", "Todavía no hay orígenes en el mapa compartido.")) + "</li>";
     return;
   }
-  var open = rankOpen[kind];
-  var shown = open ? items : items.slice(0, RANK_LIMIT);
-  ul.innerHTML = shown.map(function (r) {
-    var tag = r.tipo === "interna" ? "interna" : "externa";
+  ul.innerHTML = items.map(function (r) {
     var sub = r.sub ? '<span class="sub">' + escapeHtml(r.sub) + "</span>" : "";
     return (
       '<li data-kind="' + kind + '" data-id="' + escapeHtml(r.id) + '">' +
       '<span class="origin-copy"><strong>' + escapeHtml(r.label) + "</strong>" + sub +
-      '<span class="tag ' + (tag === "externa" ? "ext" : "int") + '">' +
-      tt("tag." + tag, tag) + "</span></span><b>" + (r.n || 0) + "</b></li>"
+      "</span><b>" + (r.n || 0) + "</b></li>"
     );
   }).join("");
   $$("li[data-id]", ul).forEach(function (li) {
@@ -290,12 +405,12 @@ function renderRanking() {
   });
   renderCollapsedList($("#ranking-paises"), paises, "paises");
   renderCollapsedList($("#ranking-regiones"), regiones, "regiones");
-  setMoreButton("paises", paises.length);
-  setMoreButton("regiones", regiones.length);
+  setCountLabel("#n-paises", paises.length);
+  setCountLabel("#n-regiones", regiones.length);
   var t = totals(visitas);
   if ($("#n-todas")) $("#n-todas").textContent = t.todas;
-  if ($("#n-ext")) $("#n-ext").textContent = t.externa;
-  if ($("#n-int")) $("#n-int").textContent = t.interna;
+  if ($("#c-visitas")) $("#c-visitas").textContent = t.todas;
+  if ($("#n-libro")) $("#n-libro").textContent = libro.length;
 }
 
 function escapeHtml(s) {
@@ -308,38 +423,54 @@ function escapeHtml(s) {
 function drawMarkers() {
   if (!markersLayer) return;
   markersLayer.clearLayers();
-  visitas
-    .filter(function (r) { return filtro === "todas" || r.tipo === filtro; })
-    .forEach(function (r) {
-      var color = r.tipo === "interna" ? "#064A31" : "#7D1B1C";
-      var ll = coordsFor(r);
-      var m = L.circleMarker(ll, {
-        radius: 7 + Math.min(Number(r.n) || 1, 12),
-        color: color,
-        weight: 2,
-        fillColor: color,
-        fillOpacity: 0.55,
-      }).bindPopup("<strong>" + escapeHtml(r.lugar) + "</strong><br>" + (r.n || 0));
-      markersLayer.addLayer(m);
-    });
+  visitas.forEach(function (r) {
+    var ll = coordsFor(r);
+    var m = L.circleMarker(ll, {
+      radius: 7 + Math.min(Number(r.n) || 1, 12),
+      color: "#064A31",
+      weight: 2,
+      fillColor: "#064A31",
+      fillOpacity: 0.55,
+    }).bindPopup("<strong>" + escapeHtml(r.lugar) + "</strong><br>" + (r.n || 0));
+    markersLayer.addLayer(m);
+  });
 }
 
 function renderLibro() {
   var box = $("#libro");
   if (!box) return;
   var rows = libro.slice().reverse();
+  if (!rows.length) {
+    box.innerHTML = '<article class="note empty">' + escapeHtml(tt("sec.vis.bookempty", "Todavía no hay mensajes. Los que se escriban se leen acá, en esta misma página.")) + "</article>";
+    var noneBtn = document.querySelector('[data-rank-more="libro"]');
+    if (noneBtn) noneBtn.hidden = true;
+    if ($("#n-libro")) $("#n-libro").textContent = "0";
+    return;
+  }
   var shown = rankOpen.libro ? rows : rows.slice(0, RANK_LIMIT);
   box.innerHTML = shown.map(function (n) {
     var lugar = n.lugar ? " · " + escapeHtml(n.lugar) : "";
+    var inst = escapeHtml(n.institucion || tt("sec.vis.anon", "Institución"));
     return (
-      '<article class="note"><strong>' + escapeHtml(n.institucion) + "</strong><br><small>" +
-      escapeHtml(n.cuando) + " · " +
-      escapeHtml(n.motivo) + " · " + tt("tag." + (n.tipo === "interna" ? "interna" : "externa"), n.tipo) +
-      lugar +
+      '<article class="note"><strong>' + inst + "</strong><br><small>" +
+      escapeHtml(n.cuando) + lugar +
       "</small><p>" + escapeHtml(n.mensaje) + "</p></article>"
     );
   }).join("");
-  setMoreButton("libro", rows.length);
+  var btn = document.querySelector('[data-rank-more="libro"]');
+  if (btn) {
+    var extra = rows.length - RANK_LIMIT;
+    if (extra <= 0) {
+      btn.hidden = true;
+      rankOpen.libro = false;
+    } else {
+      btn.hidden = false;
+      btn.textContent = rankOpen.libro
+        ? tt("sec.vis.less", "Ver menos")
+        : tt("sec.vis.more", "Ver más ({n})", { n: extra });
+    }
+  }
+  if ($("#n-libro")) $("#n-libro").textContent = String(rows.length);
 }
 
 function geoPayload(geo) {
@@ -359,6 +490,13 @@ function geoPayload(geo) {
   }
   var campus = /san luis|san juan|mendoza/i.test(city + " " + region);
   var tipo = campus ? "interna" : "externa";
+  if (provinceLabel(countryName) && !countryLabelFromName(countryName)) {
+    if (!region) region = provinceLabel(countryName);
+    countryName = "Argentina";
+    country = "AR";
+  }
+  if (countryLabelFromName(countryName)) countryName = countryLabelFromName(countryName);
+  if ((!country || country.length !== 2) && countryName === "Argentina") country = "AR";
   var bits = [city, region, countryName].filter(Boolean);
   return {
     country: country,
@@ -406,13 +544,11 @@ async function geolocalizar() {
 
   if (banner) {
     banner.classList.add("show");
-    banner.innerHTML = tt("sec.vis.you", "Estás visitando desde {lugar} · se registra como visita {tipo} (país y región estimados; no se guarda la IP).", {
+    banner.innerHTML = tt("sec.vis.you", "Estás visitando desde {lugar}. Se suma 1 al contador de visitas (país y región estimados; no se guarda la IP).", {
       lugar: g.lugar,
-      tipo: tt("tag." + g.tipo, g.tipo),
     });
   }
   if ($("#campo-lugar")) $("#campo-lugar").value = g.lugar;
-  if ($("#campo-tipo")) $("#campo-tipo").value = g.tipo;
   if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
 
   if (sessionStorage.getItem(GEO_SESSION_KEY)) return;
@@ -485,8 +621,6 @@ function initForm() {
     var fd = new FormData(ev.currentTarget);
     var extra =
       "institucion=" + encodeURIComponent(String(fd.get("institucion") || "").trim()) +
-      "&tipo=" + encodeURIComponent(String(fd.get("tipo") || "externa")) +
-      "&motivo=" + encodeURIComponent(String(fd.get("motivo") || "Visita")) +
       "&mensaje=" + encodeURIComponent(String(fd.get("mensaje") || "").trim()) +
       "&lugar=" + encodeURIComponent(String(fd.get("lugar") || "").trim());
     var ok = $("#ok-visita");
@@ -496,8 +630,10 @@ function initForm() {
         ev.currentTarget.reset();
         if (ok) {
           ok.hidden = false;
-          ok.textContent = tt("sec.vis.ok", "Mensaje anotado en el libro compartido.");
+          ok.textContent = tt("sec.vis.ok", "Mensaje publicado más abajo, en el libro de esta página.");
         }
+        var book = $("#libro");
+        if (book && book.scrollIntoView) book.scrollIntoView({ behavior: "smooth", block: "start" });
       })
       .catch(function (err) {
         if (!ok) return;
@@ -507,14 +643,6 @@ function initForm() {
           "No se pudo guardar el mensaje en el backend compartido."
         );
       });
-  });
-  $$(".filter").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      filtro = btn.dataset.filtro;
-      $$(".filter").forEach(function (b) { b.classList.toggle("on", b === btn); });
-      renderRanking();
-      drawMarkers();
-    });
   });
   $$("[data-rank-more]").forEach(function (btn) {
     btn.addEventListener("click", function () {

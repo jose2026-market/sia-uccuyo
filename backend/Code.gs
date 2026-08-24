@@ -64,6 +64,10 @@ function slugOf(lugar) {
   return String(lugar || "origen").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+function isArProvince(s) {
+  return /^(buenos aires|caba|capital federal|catamarca|chaco|chubut|cordoba|córdoba|corrientes|entre rios|entre ríos|formosa|jujuy|la pampa|la rioja|mendoza|misiones|neuquen|neuquén|rio negro|río negro|salta|san juan|san luis|santa cruz|santa fe|santiago del estero|tierra del fuego|tucuman|tucumán)$/i.test(String(s || "").trim());
+}
+
 function upsertVisit(st, rec) {
   var id = rec.id || slugOf(rec.lugar);
   var found = null;
@@ -124,9 +128,21 @@ function handleRequest(e) {
       delete p.IP;
       delete p.ipAddress;
       delete p.query;
-      var country = String(p.countryName || p.country || "").trim();
+      var countryCode = String(p.country || "").trim().toUpperCase();
+      var country = String(p.countryName || "").trim();
       var region = String(p.region || "").trim();
       var city = String(p.city || "").trim();
+      if (isArProvince(country) && !/^argentina$/i.test(country)) {
+        if (!region) region = country;
+        country = "Argentina";
+        countryCode = "AR";
+      }
+      if (countryCode === "AR" && !country) country = "Argentina";
+      if (isArProvince(countryCode)) {
+        if (!region) region = String(p.country || "");
+        country = "Argentina";
+        countryCode = "AR";
+      }
       var bits = [];
       if (city) bits.push(city);
       if (region) bits.push(region);
@@ -141,8 +157,8 @@ function handleRequest(e) {
         lat: Number(p.lat) || 0,
         lon: Number(p.lon) || 0,
         tipo: tipo,
-        country: String(p.country || ""),
-        countryName: String(p.countryName || country),
+        country: countryCode,
+        countryName: country,
         region: region,
         city: city
       });

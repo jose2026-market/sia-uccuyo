@@ -192,56 +192,52 @@
     <section class="panel" id="visitas">
       <p class="kicker" data-i18n="sec.vis.kicker">Puertas abiertas</p>
       <h2 class="titulo" data-i18n="sec.vis.title">Visitas para externos</h2>
-      <p class="lead" data-i18n="sec.vis.lead">Al abrir esta sección se registra una visita compartida (país y región; no se guarda la IP). El mapa, el ranking y los contadores son los mismos para todas las personas. El libro de visitas es opcional.</p>
+      <p class="lead" data-i18n="sec.vis.lead">Al abrir esta sección se suma 1 al contador de visitas (país y región; no se guarda la IP). El mapa y el ranking son los mismos para todas las personas. El libro de visitas es opcional: los mensajes se leen más abajo, en esta misma página.</p>
 
       <div class="banner-you" id="banner-you"></div>
 
-      <div class="grid-4" style="margin-bottom:18px">
-        <div class="stat"><b id="n-todas">0</b><span data-i18n="sec.vis.map">Visitas en el mapa</span></div>
-        <div class="stat"><b id="n-ext">0</b><span data-i18n="sec.vis.ext">Externas</span></div>
-        <div class="stat"><b id="n-int">0</b><span data-i18n="sec.vis.int">UCCuyo / Cuyo</span></div>
-        <div class="stat"><b>libro</b><span data-i18n="sec.vis.librostat">Libro compartido</span></div>
-      </div>
-
-      <div class="filters">
-        <button class="filter on" type="button" data-filtro="todas" data-i18n="sec.vis.all">Todas</button>
-        <button class="filter" type="button" data-filtro="externa" data-i18n="sec.vis.onlyext">Solo externas</button>
-        <button class="filter" type="button" data-filtro="interna" data-i18n="sec.vis.onlyint">Solo UCCuyo / Cuyo</button>
+      <div class="grid-2 visit-stats">
+        <div class="stat counter">
+          <b id="n-todas">0</b>
+          <span data-i18n="sec.vis.map">Contador de visitas</span>
+        </div>
+        <div class="stat">
+          <b id="n-libro">0</b>
+          <span data-i18n="sec.vis.librostat">Mensajes en el libro</span>
+        </div>
       </div>
 
       <div class="grid-2">
         <div>
           <div id="map" role="img" aria-label="Mapa de origen de visitas"></div>
-          <p class="lead" style="margin-top:10px;font-size:13px" data-i18n="sec.vis.mapnote">Tocá un origen en la lista para enfocarlo. Redes móviles, VPN y campus pueden desplazar la ubicación estimada. No se almacena la IP.</p>
+          <p class="lead" style="margin-top:10px;font-size:13px" data-i18n="sec.vis.mapnote">Abrí un desplegable y tocá un origen para enfocarlo en el mapa. Redes móviles, VPN y campus pueden desplazar la ubicación estimada. No se almacena la IP.</p>
         </div>
         <div class="rank-panels">
-          <div class="rank-block">
-            <h3 class="kicker" data-i18n="sec.vis.paises">Países</h3>
+          <details class="rank-block" open>
+            <summary>
+              <span data-i18n="sec.vis.paises">Países</span>
+              <span class="rank-count" id="n-paises"></span>
+            </summary>
             <ul class="origin-list" id="ranking-paises"></ul>
-            <button class="rank-more" type="button" data-rank-more="paises" hidden></button>
-          </div>
-          <div class="rank-block">
-            <h3 class="kicker" data-i18n="sec.vis.regiones">Provincias y regiones</h3>
+          </details>
+          <details class="rank-block" open>
+            <summary>
+              <span data-i18n="sec.vis.regiones">Provincias y regiones</span>
+              <span class="rank-count" id="n-regiones"></span>
+            </summary>
             <ul class="origin-list" id="ranking-regiones"></ul>
-            <button class="rank-more" type="button" data-rank-more="regiones" hidden></button>
-          </div>
+          </details>
         </div>
       </div>
 
       <article class="card goldbar" style="margin-top:22px">
         <h3 data-i18n="sec.vis.book">Libro de visitas (opcional)</h3>
-        <p data-i18n="sec.vis.bookp">No hace falta para contar la visita. Si querés dejar un mensaje, bastan institución y texto. No se publica el nombre ni el correo.</p>
+        <p data-i18n="sec.vis.bookp">El mensaje se publica acá abajo, en esta misma página, para que lo lea cualquiera que entre. Bastan institución y texto. No se publica el nombre ni el correo.</p>
         <form class="visit" id="form-visita">
           <label><span data-i18n="sec.vis.inst">Institución</span>
             <input name="institucion" required placeholder="Universidad / organismo / colegio" />
           </label>
-          <label><span data-i18n="sec.vis.tipo">Tipo de visita</span>
-            <select name="tipo" id="campo-tipo">
-              <option value="externa" data-i18n="sec.vis.tipo.ext">Externa (fuera de la UCCuyo)</option>
-              <option value="interna" data-i18n="sec.vis.tipo.int">Interna (UCCuyo)</option>
-            </select>
-          </label>
-          <label class="full"><span data-i18n="sec.vis.lugar">Ciudad o origen</span>
+          <label><span data-i18n="sec.vis.lugar">Ciudad o origen</span>
             <input name="lugar" id="campo-lugar" />
           </label>
           <label class="full"><span data-i18n="sec.vis.msg">Mensaje</span>
@@ -251,8 +247,9 @@
             <button class="btn-3d" type="submit" data-i18n="sec.vis.send">Dejar mensaje</button>
             <a class="btn-3d gold" href="mailto:observatorioia@uccuyo.edu.ar?subject=Visita%20externa%20SIA-UCCuyo" data-i18n="sec.vis.mail">Pedir recorrido por mail</a>
           </div>
-          <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700" data-i18n="sec.vis.ok">Mensaje anotado en el libro compartido.</p>
+          <p class="full" id="ok-visita" hidden style="color:#064A31;font-weight:700" data-i18n="sec.vis.ok">Mensaje publicado más abajo, en el libro de esta página.</p>
         </form>
+        <h3 class="book-title" data-i18n="sec.vis.bookread">Mensajes publicados (se leen acá)</h3>
         <div class="book" id="libro"></div>
         <button class="rank-more" type="button" data-rank-more="libro" hidden></button>
       </article>

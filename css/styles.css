@@ -359,6 +359,8 @@ h2.titulo {
   line-height: 1;
 }
 .stat span { display: block; margin-top: 8px; font-size: 13px; font-weight: 600; }
+.visit-stats { margin-bottom: 18px; }
+.stat.counter b { font-size: 48px; letter-spacing: .04em; }
 
 .level {
   display: grid;
@@ -398,7 +400,40 @@ h2.titulo {
   border-radius: 14px;
   overflow: hidden;
 }
-.rank-block .kicker { margin: 12px 14px 6px; }
+.rank-block > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--verde);
+  background: #fff8ee;
+  border-bottom: 1px solid var(--linea);
+}
+.rank-block > summary::-webkit-details-marker { display: none; }
+.rank-block > summary::after {
+  content: "▾";
+  color: var(--oro);
+  font-size: 14px;
+  transition: transform .15s ease;
+}
+.rank-block:not([open]) > summary::after { transform: rotate(-90deg); }
+.rank-block:not([open]) > summary { border-bottom: 0; }
+.rank-count {
+  margin-left: auto;
+  margin-right: 8px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 12px;
+  color: var(--muted);
+}
 .origin-list { list-style: none; margin: 0; padding: 0; }
 .origin-list li {
   display: flex;
@@ -429,14 +464,6 @@ h2.titulo {
   color: var(--muted);
   font-weight: 600;
 }
-.origin-list .tag {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  margin: 0;
-}
 .origin-list li.empty:hover { background: var(--papel); }
 .origin-list .empty {
   cursor: default;
@@ -459,8 +486,10 @@ h2.titulo {
 }
 .rank-more:hover { background: #fff4e0; border-color: var(--oro); }
 .rank-more[hidden] { display: none !important; }
-.tag.ext { color: var(--bordeaux); }
-.tag.int { color: var(--verde); }
+.book-title {
+  margin: 22px 0 0;
+  font-size: 16px;
+}
 
 form.visit {
   display: grid;
@@ -500,6 +529,11 @@ input, select, textarea {
   display: none;
 }
 .banner-you.show { display: block; }
+.note.empty {
+  border-left-color: var(--oro);
+  color: var(--muted);
+  font-weight: 600;
+}
 
 footer.site {
   background: var(--verde-oscuro);
