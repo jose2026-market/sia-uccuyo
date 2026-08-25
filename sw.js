@@ -1,4 +1,4 @@
-const CACHE = "semillero-ia-v5";
+const CACHE = "semillero-ia-v6";
 const PRECACHE = [
   "./",
   "./index.html",

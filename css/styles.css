@@ -628,6 +628,10 @@ input, select, textarea {
   display: none;
 }
 .banner-you.show { display: block; }
+.geo-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
 .note.empty {
   border-left-color: var(--oro);
   color: var(--muted);

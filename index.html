@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/styles.css?v=5" />
+  <link rel="stylesheet" href="css/styles.css?v=6" />
 </head>
 <body>
   <a class="skip" href="#inicio" data-i18n="skip">Ir al contenido</a>
@@ -264,7 +264,7 @@
     <section class="panel" id="visitas">
       <p class="kicker" data-i18n="sec.vis.kicker">Puertas abiertas</p>
       <h2 class="titulo" data-i18n="sec.vis.title">Visitas al Semillero</h2>
-      <p class="lead" data-i18n="sec.vis.lead">Al abrir esta sección se suma 1 al contador de visitas (país y región; no se guarda la IP). El mapa y el ranking son los mismos para todas las personas. El libro de visitas es opcional: los mensajes se leen más abajo, en esta misma página.</p>
+      <p class="lead" data-i18n="sec.vis.lead">Al abrir esta sección se suma 1 al contador. El origen se estima por la red y, si hace falta, por la zona horaria del dispositivo; no se guarda la IP. El ranking solo muestra orígenes georreferenciados.</p>
 
       <div class="banner-you" id="banner-you"></div>
 
@@ -282,7 +282,7 @@
       <div class="grid-2">
         <div>
           <div id="map" role="img" aria-label="Mapa de origen de visitas"></div>
-          <p class="lead" style="margin-top:10px;font-size:13px" data-i18n="sec.vis.mapnote">Abrí un desplegable y tocá un origen para enfocarlo en el mapa. Redes móviles, VPN y campus pueden desplazar la ubicación estimada. No se almacena la IP.</p>
+          <p class="lead" style="margin-top:10px;font-size:13px" data-i18n="sec.vis.mapnote">El origen se estima con varios servicios de red y, si la red no informa ciudad o provincia, con la zona horaria del dispositivo. VPN, redes móviles y campus pueden desplazar la ubicación. El ranking no incluye visitas sin georreferencia. No se almacena la IP.</p>
         </div>
         <div class="rank-panels">
           <details class="rank-block" open>
@@ -301,6 +301,7 @@
           </details>
         </div>
       </div>
+      <p class="lead geo-note" id="geo-note" hidden></p>
 
       <article class="card goldbar" style="margin-top:22px">
         <h3 data-i18n="sec.vis.book">Libro de visitas (opcional)</h3>
@@ -393,13 +394,13 @@
         <a href="mailto:observatorioia@uccuyo.edu.ar" data-i18n="nav.secretaria">Secretaría</a>
       </div>
     </div>
-    <p class="foot-note" data-i18n="foot.line3">Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por país y región; no se guarda la IP.</p>
+    <p class="foot-note" data-i18n="foot.line3">Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por red y zona horaria; no se guarda la IP.</p>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/config.js?v=5"></script>
-  <script src="js/i18n-dict.js?v=5"></script>
-  <script src="js/i18n.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/config.js?v=6"></script>
+  <script src="js/i18n-dict.js?v=6"></script>
+  <script src="js/i18n.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 </body>
 </html>

@@ -21,6 +21,9 @@ function getState() {
     if (!o.libro) {
       o.libro = [];
     }
+    if (o.sinGeorref == null) {
+      o.sinGeorref = 0;
+    }
     return o;
   } catch (err) {
     return { visitas: [], libro: [] };
@@ -44,8 +47,63 @@ function publicLibro(rows) {
   return out;
 }
 
+function isUnknownText(s) {
+  s = String(s || "").toLowerCase()
+    .replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+    .replace(/ó/g, "o").replace(/ú/g, "u").replace(/ñ/g, "n")
+    .replace(/[^a-z0-9]+/g, " ").trim();
+  return !s ||
+    s === "origen no determinado" ||
+    s === "sin pais" ||
+    s === "sin provincia region" ||
+    s === "unknown" ||
+    s === "undetermined" ||
+    s === "n a" ||
+    s === "na" ||
+    s === "null" ||
+    s === "undefined" ||
+    s === "xx" ||
+    s === "zz";
+}
+
+function isUnlocatedRecord(r) {
+  var code = String((r && r.country) || "").trim().toUpperCase();
+  var name = String((r && r.countryName) || "").trim();
+  var region = String((r && r.region) || "").trim();
+  var lugar = String((r && r.lugar) || "").trim();
+  if (/^[A-Z]{2}$/.test(code) && code !== "XX" && code !== "ZZ") return false;
+  if (name && !isUnknownText(name)) return false;
+  if (region && !isUnknownText(region)) return false;
+  if (lugar && !isUnknownText(lugar)) {
+    var bits = lugar.split(",");
+    var last = bits[bits.length - 1] ? bits[bits.length - 1].trim() : "";
+    if (last && !isUnknownText(last)) return false;
+  }
+  return true;
+}
+
+function migrateUnknownVisits(st) {
+  st.sinGeorref = Number(st.sinGeorref) || 0;
+  var kept = [];
+  var i;
+  for (i = 0; i < st.visitas.length; i++) {
+    var r = st.visitas[i];
+    if (isUnlocatedRecord(r)) {
+      st.sinGeorref += Number(r.n) || 0;
+    } else {
+      kept.push(r);
+    }
+  }
+  st.visitas = kept;
+}
+
 function publicState(st) {
-  return { ok: true, visitas: st.visitas, libro: publicLibro(st.libro) };
+  return {
+    ok: true,
+    visitas: st.visitas,
+    libro: publicLibro(st.libro),
+    sinGeorref: Number(st.sinGeorref) || 0
+  };
 }
 
 function saveState(st) {
@@ -114,10 +172,16 @@ function handleRequest(e) {
     return jsonOut({ ok: false, error: "invalid_site" }, callback);
   }
 
-  var lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+    try {
     var st = getState();
+    var n0 = st.visitas.length;
+    var u0 = Number(st.sinGeorref) || 0;
+    migrateUnknownVisits(st);
+    if (st.visitas.length !== n0 || Number(st.sinGeorref) !== u0) {
+      saveState(st);
+    }
 
     if (action === "state") {
       return jsonOut(publicState(st), callback);
@@ -143,25 +207,37 @@ function handleRequest(e) {
         country = "Argentina";
         countryCode = "AR";
       }
-      var bits = [];
-      if (city) bits.push(city);
-      if (region) bits.push(region);
-      if (country) bits.push(country);
-      var lugar = bits.join(", ") || "Origen no determinado";
-      var tipo = String(p.tipo || "").trim();
-      if (tipo !== "interna" && tipo !== "externa") {
-        tipo = /san luis|san juan|mendoza/i.test(region + " " + city) ? "interna" : "externa";
+      if (isArProvince(region) && !countryCode) {
+        country = "Argentina";
+        countryCode = "AR";
       }
-      upsertVisit(st, {
-        lugar: lugar,
+      var forcedUnknown = String(p.located || "") === "0";
+      var rec = {
+        lugar: "",
         lat: Number(p.lat) || 0,
         lon: Number(p.lon) || 0,
-        tipo: tipo,
+        tipo: "",
         country: countryCode,
         countryName: country,
         region: region,
         city: city
-      });
+      };
+      var bits = [];
+      if (city) bits.push(city);
+      if (region) bits.push(region);
+      if (country) bits.push(country);
+      rec.lugar = bits.join(", ");
+      rec.tipo = String(p.tipo || "").trim();
+      if (rec.tipo !== "interna" && rec.tipo !== "externa") {
+        rec.tipo = /san luis|san juan|mendoza/i.test(region + " " + city) ? "interna" : "externa";
+      }
+      if (forcedUnknown || isUnlocatedRecord(rec) || isUnknownText(rec.lugar) || isUnknownText(country)) {
+        st.sinGeorref = Number(st.sinGeorref) || 0;
+        st.sinGeorref += 1;
+        saveState(st);
+        return jsonOut(publicState(st), callback);
+      }
+      upsertVisit(st, rec);
       saveState(st);
       return jsonOut(publicState(st), callback);
     }

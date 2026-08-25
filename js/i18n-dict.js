@@ -87,7 +87,7 @@ window.I18N_DICT = {
   "sec.eq.ver": { es: "Ver ficha en el Observatorio de IA", en: "See the profile on the AI Observatory" },
   "sec.vis.kicker": { es: "Puertas abiertas", en: "Open doors" },
   "sec.vis.title": { es: "Visitas al Semillero", en: "Visits to the Seedbed" },
-  "sec.vis.lead": { es: "Al abrir esta sección se suma 1 al contador de visitas (país y región; no se guarda la IP). El mapa y el ranking son los mismos para todas las personas. El libro de visitas es opcional: los mensajes se leen más abajo, en esta misma página.", en: "Opening this section adds 1 to the visit counter (country and region; the IP is not stored). Everyone sees the same map and ranking. The guest book is optional: messages are read further down on this same page." },
+  "sec.vis.lead": { es: "Al abrir esta sección se suma 1 al contador. El origen se estima por la red y, si hace falta, por la zona horaria del dispositivo; no se guarda la IP. El ranking solo muestra orígenes georreferenciados.", en: "Opening this section adds 1 to the counter. Origin is estimated from the network and, if needed, from the device time zone; the IP is not stored. The ranking only shows georeferenced origins." },
   "sec.vis.map": { es: "Contador de visitas", en: "Visit counter" },
   "sec.vis.librostat": { es: "Mensajes en el libro", en: "Guest-book messages" },
   "sec.vis.rank": { es: "Ranking de orígenes", en: "Origin ranking" },
@@ -98,7 +98,7 @@ window.I18N_DICT = {
   "sec.vis.nopais": { es: "Sin país", en: "Unknown country" },
   "sec.vis.noregion": { es: "Sin provincia / región", en: "Unknown province / region" },
   "sec.vis.empty": { es: "Todavía no hay orígenes en el mapa compartido.", en: "There are no origins on the shared map yet." },
-  "sec.vis.mapnote": { es: "Abrí un desplegable y tocá un origen para enfocarlo en el mapa. Redes móviles, VPN y campus pueden desplazar la ubicación estimada. No se almacena la IP.", en: "Open a dropdown and tap an origin to focus it on the map. Mobile networks, VPNs and campuses can shift the estimated location. The IP is not stored." },
+  "sec.vis.mapnote": { es: "El origen se estima con varios servicios de red y, si la red no informa ciudad o provincia, con la zona horaria del dispositivo. VPN, redes móviles y campus pueden desplazar la ubicación. El ranking no incluye visitas sin georreferencia. No se almacena la IP.", en: "Origin is estimated with several network services and, if the network does not report a city or province, with the device time zone. Mobile networks, VPNs and campuses can shift the location. The ranking omits visits that cannot be georeferenced. The IP is not stored." },
   "sec.vis.book": { es: "Libro de visitas (opcional)", en: "Guest book (optional)" },
   "sec.vis.bookp": { es: "El mensaje se publica acá abajo, en esta misma página, para que lo lea cualquiera que entre. Bastan institución y texto. No se publica el nombre ni el correo.", en: "The message is published below, on this same page, for anyone who visits. Institution and text are enough. Name and email are not published." },
   "sec.vis.bookread": { es: "Mensajes publicados (se leen acá)", en: "Published messages (read them here)" },
@@ -118,6 +118,10 @@ window.I18N_DICT = {
   "sec.vis.mail": { es: "Pedir recorrido por mail", en: "Request a tour by email" },
   "sec.vis.nogeo": { es: "No se pudo estimar el origen. El mapa y el ranking siguen siendo los compartidos.", en: "Origin could not be estimated. The map and ranking remain the shared ones." },
   "sec.vis.you": { es: "Estás visitando desde {lugar}. Se suma 1 al contador de visitas (país y región estimados; no se guarda la IP).", en: "You are visiting from {lugar}. 1 is added to the visit counter (estimated country and region; IP is not stored)." },
+  "sec.vis.you.tz": { es: "Origen estimado por zona horaria del dispositivo: {lugar}. Se suma 1 al contador. No se guarda la IP.", en: "Origin estimated from the device time zone: {lugar}. 1 is added to the counter. The IP is not stored." },
+  "sec.vis.you.locale": { es: "Origen estimado por idioma del dispositivo: {lugar}. Se suma 1 al contador. No se guarda la IP.", en: "Origin estimated from the device language: {lugar}. 1 is added to the counter. The IP is not stored." },
+  "sec.vis.you.none": { es: "Tu visita se contabiliza. No fue posible georreferenciar la red (VPN, red privada o protección del navegador). El ranking solo muestra orígenes estimados.", en: "Your visit is counted. The network could not be georeferenced (VPN, private network or browser protection). The ranking only shows estimated origins." },
+  "sec.vis.unlocated": { es: "{n} visitas se contabilizan pero no se georreferenciaron (VPN, red privada o protección del navegador). No figuran como país.", en: "{n} visits are counted but could not be georeferenced (VPN, private network or browser protection). They are not listed as a country." },
   "sec.fo.kicker": { es: "Trayecto", en: "Pathway" },
   "sec.fo.title": { es: "Cinco niveles. Entrás en el I.", en: "Five levels. You enter at I." },
   "sec.fo.lead": { es: "Avanzás según tu proyecto, no según el año de la carrera.", en: "You progress according to your project, not your year of study." },
@@ -188,5 +192,5 @@ window.I18N_DICT = {
   "sec.vis.mot.otra": { es: "Otra", en: "Other" },
   "foot.col.mas": { es: "Más", en: "More" },
   "foot.line2": { es: "Identidad visual según el Manual de Normas UCCuyo 1.0 (2017): verde institucional #064A31, bordeaux #7D1B1C y oro #E38A00. Tipografías Droid Serif y Montserrat.", en: "Visual identity according to the UCCuyo Brand Manual 1.0 (2017): institutional green #064A31, bordeaux #7D1B1C and gold #E38A00. Droid Serif and Montserrat typefaces." },
-  "foot.line3": { es: "Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por país y región; no se guarda la IP.", en: "The 3D burgundy buttons are the subordinate colour of the brand manual. Map: OpenStreetMap · origin estimated by country and region; the IP is not stored." }
+  "foot.line3": { es: "Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por red y zona horaria; no se guarda la IP.", en: "The 3D burgundy buttons are the subordinate colour of the brand manual. Map: OpenStreetMap · origin estimated from network and time zone; the IP is not stored." }
 };

@@ -109,7 +109,36 @@ const COUNTRY_LABELS = {
 
 const RANK_LIMIT = 6;
 let map, markersLayer, visitas = [], libro = [];
+let sinGeorref = 0;
 let rankOpen = { libro: false };
+
+const TZ_HINTS = {
+  "America/Argentina/San_Luis": { country: "AR", region: "San Luis", city: "San Luis", lat: -33.3, lon: -66.34 },
+  "America/Argentina/San_Juan": { country: "AR", region: "San Juan", city: "San Juan", lat: -31.54, lon: -68.54 },
+  "America/Argentina/Mendoza": { country: "AR", region: "Mendoza", city: "Mendoza", lat: -32.89, lon: -68.85 },
+  "America/Argentina/Cordoba": { country: "AR", region: "Córdoba", city: "Córdoba", lat: -31.42, lon: -64.19 },
+  "America/Argentina/Salta": { country: "AR", region: "Salta", city: "Salta", lat: -24.79, lon: -65.41 },
+  "America/Argentina/Jujuy": { country: "AR", region: "Jujuy", city: "San Salvador de Jujuy", lat: -24.19, lon: -65.3 },
+  "America/Argentina/Tucuman": { country: "AR", region: "Tucumán", city: "San Miguel de Tucumán", lat: -26.82, lon: -65.22 },
+  "America/Argentina/Catamarca": { country: "AR", region: "Catamarca", city: "San Fernando del Valle de Catamarca", lat: -28.47, lon: -65.78 },
+  "America/Argentina/La_Rioja": { country: "AR", region: "La Rioja", city: "La Rioja", lat: -29.41, lon: -66.86 },
+  "America/Argentina/Rio_Gallegos": { country: "AR", region: "Santa Cruz", city: "Río Gallegos", lat: -51.62, lon: -69.22 },
+  "America/Argentina/Ushuaia": { country: "AR", region: "Tierra del Fuego", city: "Ushuaia", lat: -54.8, lon: -68.3 },
+  "America/Argentina/ComodRivadavia": { country: "AR", region: "Chubut", city: "Comodoro Rivadavia", lat: -45.86, lon: -67.48 },
+  "America/Argentina/Buenos_Aires": { country: "AR", region: "", city: "", lat: -34.6, lon: -64.0 },
+  "America/Argentina/Argentina": { country: "AR", region: "", city: "", lat: -34.6, lon: -64.0 },
+  "America/Santiago": { country: "CL", region: "", city: "", lat: -33.45, lon: -70.67 },
+  "America/Montevideo": { country: "UY", region: "", city: "", lat: -34.9, lon: -56.16 },
+  "America/Sao_Paulo": { country: "BR", region: "", city: "", lat: -23.55, lon: -46.63 },
+  "America/Asuncion": { country: "PY", region: "", city: "", lat: -25.26, lon: -57.58 },
+  "America/La_Paz": { country: "BO", region: "", city: "", lat: -16.5, lon: -68.15 },
+  "America/Lima": { country: "PE", region: "", city: "", lat: -12.05, lon: -77.04 },
+  "America/Bogota": { country: "CO", region: "", city: "", lat: 4.71, lon: -74.07 },
+  "America/Guayaquil": { country: "EC", region: "", city: "", lat: -2.17, lon: -79.92 },
+  "America/Caracas": { country: "VE", region: "", city: "", lat: 10.48, lon: -66.9 },
+  "America/Mexico_City": { country: "MX", region: "", city: "", lat: 19.43, lon: -99.13 },
+  "Europe/Madrid": { country: "ES", region: "", city: "", lat: 40.42, lon: -3.7 }
+};
 
 function cfg() {
   return window.SIA_CONFIG || {};
@@ -176,6 +205,7 @@ function applyState(data) {
   if (!data || data.ok === false) throw new Error((data && data.error) || "bad-state");
   visitas = Array.isArray(data.visitas) ? data.visitas : [];
   libro = Array.isArray(data.libro) ? data.libro : [];
+  sinGeorref = Number(data.sinGeorref) || 0;
   renderRanking();
   drawMarkers();
   renderLibro();
@@ -191,11 +221,15 @@ function loadSharedState() {
 }
 
 function totals(rows) {
-  var t = { todas: 0 };
+  var located = 0;
+  var unknown = 0;
   (rows || []).forEach(function (r) {
-    t.todas += Number(r.n) || 0;
+    var n = Number(r.n) || 0;
+    if (isUnlocatedRow(r)) unknown += n;
+    else located += n;
   });
-  return t;
+  unknown += Number(sinGeorref) || 0;
+  return { todas: located + unknown, located: located, unlocated: unknown };
 }
 
 function formatNum(n) {
@@ -217,6 +251,7 @@ function visitScopeStats(rows) {
   var noPais = foldName(tt("sec.vis.nopais", "Sin país"));
   var noReg = foldName(tt("sec.vis.noregion", "Sin provincia / región"));
   (rows || []).forEach(function (r) {
+    if (isUnlocatedRow(r)) return;
     var n = Number(r.n) || 0;
     var p = originParts(r);
     out.mundo += n;
@@ -244,7 +279,8 @@ function visitScopeStats(rows) {
 
 function updateNumeros() {
   var s = visitScopeStats(visitas);
-  setNum("#c-visitas", s.mundo);
+  var t = totals(visitas);
+  setNum("#c-visitas", t.todas);
   setNum("#c-vis-prov", s.provincia);
   setNum("#c-vis-reg", s.region);
   setNum("#c-vis-reg-n", s.nCuyo);
@@ -301,7 +337,43 @@ function countryLabelFromName(s) {
   return map[k] || "";
 }
 
+function isUnknownLabel(s) {
+  var k = foldName(s);
+  return !k ||
+    k === "origen no determinado" ||
+    k === "sin pais" ||
+    k === "sin provincia region" ||
+    k === "unknown" ||
+    k === "undetermined" ||
+    k === "n a" ||
+    k === "na" ||
+    k === "null" ||
+    k === "undefined" ||
+    k === "xx" ||
+    k === "zz";
+}
+
+function isUnlocatedRow(r) {
+  if (!r) return true;
+  var code = String(r.country || "").trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(code) && code !== "XX" && code !== "ZZ") return false;
+  if (r.countryName && !isUnknownLabel(r.countryName) && String(r.countryName).trim().length > 2) return false;
+  if (r.region && (provinceLabel(r.region) || String(r.region).trim().length > 2) && !isUnknownLabel(r.region)) return false;
+  if (r.lugar) {
+    var bits = String(r.lugar).split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    var last = bits.length ? bits[bits.length - 1] : "";
+    if (countryLabelFromName(last) || provinceLabel(last)) return false;
+    if (isUnknownLabel(r.lugar) || isUnknownLabel(last)) return true;
+  }
+  return true;
+}
+
+function locatedVisitas() {
+  return (visitas || []).filter(function (r) { return !isUnlocatedRow(r); });
+}
+
 function coordsFor(row) {
+  if (isUnlocatedRow(row)) return null;
   if (row.lat && row.lon) return [row.lat, row.lon];
   var reg = foldName(row.region || row.lugar || "");
   var best = "";
@@ -319,7 +391,7 @@ function coordsFor(row) {
     var c = CENTROIDS[parts.code];
     return [c[1], c[0]];
   }
-  return [-34.6, -64.0];
+  return null;
 }
 
 function stripTipoGlue(s) {
@@ -337,6 +409,13 @@ function originParts(row) {
   var city = stripTipoGlue(row.city || "");
   var named = countryLabelFromName(country);
   var asProvince = provinceLabel(country);
+  if (isUnknownLabel(country)) {
+    country = "";
+    named = "";
+    asProvince = "";
+  }
+  if (isUnknownLabel(region)) region = "";
+  if (isUnknownLabel(city)) city = "";
 
   if (named) country = named;
   if (asProvince) {
@@ -346,7 +425,7 @@ function originParts(row) {
   }
   if (COUNTRY_LABELS[code]) country = COUNTRY_LABELS[code];
 
-  if ((!country || !region) && row.lugar) {
+  if ((!country || !region) && row.lugar && !isUnknownLabel(row.lugar)) {
     var bits = String(row.lugar).split(",").map(function (s) { return stripTipoGlue(s); }).filter(Boolean);
     var last = bits.length ? bits[bits.length - 1] : "";
     var prev = bits.length >= 2 ? bits[bits.length - 2] : "";
@@ -373,6 +452,7 @@ function originParts(row) {
   if (!country && COUNTRY_LABELS[code]) country = COUNTRY_LABELS[code];
   if (!country) country = tt("sec.vis.nopais", "Sin país");
   if (!region) region = tt("sec.vis.noregion", "Sin provincia / región");
+  if (isUnknownLabel(country)) country = tt("sec.vis.nopais", "Sin país");
   return { code: code, country: country, region: region };
 }
 
@@ -434,7 +514,7 @@ function renderCollapsedList(ul, items, kind) {
       var row = items.find(function (v) { return v.id === li.dataset.id; });
       if (row && map) {
         var ll = coordsFor(row.sample || row);
-        map.setView(ll, kind === "paises" ? 4 : 6);
+        if (ll) map.setView(ll, kind === "paises" ? 4 : 6);
       }
     });
   });
@@ -446,12 +526,16 @@ function countryKey(parts) {
 }
 
 function renderRanking() {
-  var rows = filteredVisitas();
+  var rows = locatedVisitas();
+  var noPais = foldName(tt("sec.vis.nopais", "Sin país"));
+  var noReg = foldName(tt("sec.vis.noregion", "Sin provincia / región"));
   var paises = groupRanking(
     rows,
     function (_r, p) { return "pais:" + countryKey(p); },
     function (_r, p) { return p.country; }
-  );
+  ).filter(function (item) {
+    return foldName(item.label) !== noPais && !isUnknownLabel(item.label);
+  });
   var regiones = groupRanking(
     rows,
     function (_r, p) { return "reg:" + countryKey(p) + "|" + String(p.region || "").toLowerCase(); },
@@ -460,6 +544,8 @@ function renderRanking() {
     var parts = originParts(item.sample || {});
     item.sub = parts.country;
     return item;
+  }).filter(function (item) {
+    return foldName(item.label) !== noReg && !isUnknownLabel(item.label);
   });
   renderCollapsedList($("#ranking-paises"), paises, "paises");
   renderCollapsedList($("#ranking-regiones"), regiones, "regiones");
@@ -468,6 +554,16 @@ function renderRanking() {
   var t = totals(visitas);
   if ($("#n-todas")) $("#n-todas").textContent = formatNum(t.todas);
   if ($("#n-libro")) $("#n-libro").textContent = formatNum(libro.length);
+  var note = $("#geo-note");
+  if (note) {
+    if (t.unlocated) {
+      note.hidden = false;
+      note.textContent = tt("sec.vis.unlocated", "{n} visitas se contabilizan pero no se georreferenciaron (VPN, red privada o protección del navegador). No figuran como país.", { n: formatNum(t.unlocated) });
+    } else {
+      note.hidden = true;
+      note.textContent = "";
+    }
+  }
   updateNumeros();
 }
 
@@ -482,7 +578,9 @@ function drawMarkers() {
   if (!markersLayer) return;
   markersLayer.clearLayers();
   visitas.forEach(function (r) {
+    if (isUnlocatedRow(r)) return;
     var ll = coordsFor(r);
+    if (!ll) return;
     var m = L.circleMarker(ll, {
       radius: 7 + Math.min(Number(r.n) || 1, 12),
       color: "#064A31",
@@ -531,9 +629,46 @@ function renderLibro() {
   if ($("#n-libro")) $("#n-libro").textContent = String(rows.length);
 }
 
+function firstGeoField(obj, keys) {
+  for (var i = 0; i < keys.length; i++) {
+    var v = obj[keys[i]];
+    if (v == null) continue;
+    var s = String(v).trim();
+    if (s && s !== "-" && s.toLowerCase() !== "undefined") return s;
+  }
+  return "";
+}
+
+function normalizeGeo(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  if (raw.error || raw.success === false) return null;
+  var code = firstGeoField(raw, ["country_code", "countryCode", "country_code2"]).toUpperCase();
+  var name = firstGeoField(raw, ["country_name", "countryName"]);
+  if (!name) {
+    var c = firstGeoField(raw, ["country"]);
+    if (c.length > 2) name = c;
+    else if (c.length === 2 && !code) code = c.toUpperCase();
+  }
+  if (name.length === 2 && !code) {
+    code = name.toUpperCase();
+    name = "";
+  }
+  if (code === "ARG") code = "AR";
+  var lat = raw.latitude != null ? raw.latitude : raw.lat;
+  var lon = raw.longitude != null ? raw.longitude : raw.lon;
+  return {
+    country_code: code,
+    country_name: name,
+    region: firstGeoField(raw, ["region", "regionName", "region_name", "subdivision", "principalSubdivision"]),
+    city: firstGeoField(raw, ["city", "cityName", "city_name"]),
+    latitude: lat,
+    longitude: lon
+  };
+}
+
 function geoPayload(geo) {
-  /* ipapi.co incluye "ip" en el JSON: se descarta y nunca se envía al backend. */
-  var country = String(geo.country_code || "").trim();
+  /* Los JSON de geolocalización pueden traer "ip": se descarta y nunca se envía al backend. */
+  var country = String(geo.country_code || "").trim().toUpperCase();
   var countryName = String(geo.country_name || "").trim();
   var region = String(geo.region || "").trim();
   var city = String(geo.city || "").trim();
@@ -546,15 +681,17 @@ function geoPayload(geo) {
     lat = Math.round(lat * 100) / 100;
     lon = Math.round(lon * 100) / 100;
   }
-  var campus = /san luis|san juan|mendoza/i.test(city + " " + region);
-  var tipo = campus ? "interna" : "externa";
   if (provinceLabel(countryName) && !countryLabelFromName(countryName)) {
     if (!region) region = provinceLabel(countryName);
     countryName = "Argentina";
     country = "AR";
   }
   if (countryLabelFromName(countryName)) countryName = countryLabelFromName(countryName);
+  if (COUNTRY_LABELS[country]) countryName = COUNTRY_LABELS[country];
   if ((!country || country.length !== 2) && countryName === "Argentina") country = "AR";
+  if (country.length !== 2) country = "";
+  if (provinceLabel(region)) region = provinceLabel(region);
+  var campus = /san luis|san juan|mendoza/i.test(city + " " + region);
   var bits = [city, region, countryName].filter(Boolean);
   return {
     country: country,
@@ -563,12 +700,134 @@ function geoPayload(geo) {
     city: city,
     lat: lat,
     lon: lon,
-    tipo: tipo,
-    lugar: bits.join(", ") || countryName || "Origen no determinado",
+    tipo: campus ? "interna" : "externa",
+    lugar: bits.join(", "),
+    source: "ip"
   };
 }
 
+function hasCountry(g) {
+  if (!g) return false;
+  var code = String(g.country || "").toUpperCase();
+  if (/^[A-Z]{2}$/.test(code) && code !== "XX" && code !== "ZZ") return true;
+  return !!(g.countryName && !isUnknownLabel(g.countryName) && String(g.countryName).trim().length > 2);
+}
+
+function fetchGeoJson(url, ms) {
+  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 4000);
+  var opts = { method: "GET", cache: "no-store" };
+  if (ctrl) opts.signal = ctrl.signal;
+  return fetch(url, opts).then(function (res) {
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("http");
+    return res.json();
+  }).catch(function () {
+    clearTimeout(timer);
+    return null;
+  });
+}
+
+async function lookupIpOrigin() {
+  var urls = [
+    "https://get.geojs.io/v1/ip/geo.json",
+    "https://ipwho.is/?fields=success,country,country_code,region,city,latitude,longitude",
+    "https://freeipapi.com/api/json",
+    "https://ipapi.co/json/"
+  ];
+  var best = null;
+  for (var i = 0; i < urls.length; i++) {
+    var raw = await fetchGeoJson(urls[i], 4000);
+    var norm = normalizeGeo(raw);
+    if (!norm) continue;
+    var g = geoPayload(norm);
+    if (!hasCountry(g)) continue;
+    best = g;
+    if (g.region) return g;
+  }
+  return best;
+}
+
+function timezoneHint() {
+  var tz = "";
+  try {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch (_e) {}
+  return TZ_HINTS[tz] || null;
+}
+
+function localeHint() {
+  var lang = String((navigator.languages && navigator.languages[0]) || navigator.language || "")
+    .toLowerCase()
+    .replace("_", "-");
+  var map = {
+    "es-ar": "AR",
+    "es-cl": "CL",
+    "es-uy": "UY",
+    "es-py": "PY",
+    "es-bo": "BO",
+    "es-pe": "PE",
+    "es-co": "CO",
+    "es-mx": "MX",
+    "es-ec": "EC",
+    "es-ve": "VE",
+    "pt-br": "BR"
+  };
+  var code = map[lang];
+  if (!code) return null;
+  return { country: code, countryName: COUNTRY_LABELS[code] || "", region: "", city: "", lat: 0, lon: 0 };
+}
+
+function applyHint(g, hint, source) {
+  if (!hint) return g;
+  if (!hasCountry(g)) {
+    g.country = hint.country;
+    g.countryName = COUNTRY_LABELS[hint.country] || hint.countryName || "";
+    g.region = hint.region || "";
+    g.city = hint.city || "";
+    g.lat = hint.lat || 0;
+    g.lon = hint.lon || 0;
+    g.source = source;
+    return g;
+  }
+  if (g.country === hint.country && !g.region && hint.region) {
+    g.region = hint.region;
+    if (!g.city && hint.city) g.city = hint.city;
+    if (!(g.lat && g.lon) && hint.lat) {
+      g.lat = hint.lat;
+      g.lon = hint.lon;
+    }
+  }
+  return g;
+}
+
+function finishOrigin(g) {
+  if (COUNTRY_LABELS[g.country]) g.countryName = COUNTRY_LABELS[g.country];
+  if (provinceLabel(g.region)) g.region = provinceLabel(g.region);
+  if (!g.region && provinceLabel(g.city)) g.region = provinceLabel(g.city);
+  var campus = /san luis|san juan|mendoza/i.test((g.city || "") + " " + (g.region || ""));
+  g.tipo = campus ? "interna" : "externa";
+  g.lugar = [g.city, g.region, g.countryName].filter(Boolean).join(", ");
+  if (!(g.lat && g.lon)) {
+    var ll = coordsFor({
+      country: g.country,
+      countryName: g.countryName,
+      region: g.region,
+      city: g.city,
+      lugar: g.lugar,
+      lat: g.lat,
+      lon: g.lon
+    });
+    if (ll) {
+      g.lat = ll[0];
+      g.lon = ll[1];
+    }
+  }
+  return g;
+}
+
 async function pingVisitgeo(g) {
+  var located = hasCountry(g) ? "1" : "0";
   var extra =
     "country=" + encodeURIComponent(g.country || "") +
     "&countryName=" + encodeURIComponent(g.countryName || "") +
@@ -576,7 +835,8 @@ async function pingVisitgeo(g) {
     "&city=" + encodeURIComponent(g.city || "") +
     "&tipo=" + encodeURIComponent(g.tipo || "externa") +
     "&lat=" + encodeURIComponent(g.lat || 0) +
-    "&lon=" + encodeURIComponent(g.lon || 0);
+    "&lon=" + encodeURIComponent(g.lon || 0) +
+    "&located=" + located;
   return fetchApps("visitgeo", extra).then(applyState);
 }
 
@@ -590,23 +850,38 @@ async function geolocalizar() {
     lat: 0,
     lon: 0,
     tipo: "externa",
-    lugar: tt("sec.vis.nopais", "Sin país"),
+    lugar: "",
+    source: ""
   };
   try {
-    var res = await fetch("https://ipapi.co/json/", { method: "GET" });
-    if (res.ok) {
-      var raw = await res.json();
-      if (raw && !raw.error) g = geoPayload(raw);
-    }
+    var ip = await lookupIpOrigin();
+    if (ip) g = ip;
   } catch (_geoErr) {}
+  g = applyHint(g, timezoneHint(), "timezone");
+  if (!hasCountry(g)) g = applyHint(g, localeHint(), "locale");
+  g = finishOrigin(g);
 
   if (banner) {
     banner.classList.add("show");
-    banner.innerHTML = tt("sec.vis.you", "Estás visitando desde {lugar}. Se suma 1 al contador de visitas (país y región estimados; no se guarda la IP).", {
-      lugar: g.lugar,
-    });
+    if (hasCountry(g)) {
+      var msg = "sec.vis.you";
+      var fallback = "Estás visitando desde {lugar}. Se suma 1 al contador de visitas (país y región estimados; no se guarda la IP).";
+      if (g.source === "timezone") {
+        msg = "sec.vis.you.tz";
+        fallback = "Origen estimado por zona horaria del dispositivo: {lugar}. Se suma 1 al contador. No se guarda la IP.";
+      } else if (g.source === "locale") {
+        msg = "sec.vis.you.locale";
+        fallback = "Origen estimado por idioma del dispositivo: {lugar}. Se suma 1 al contador. No se guarda la IP.";
+      }
+      banner.innerHTML = tt(msg, fallback, { lugar: g.lugar });
+    } else {
+      banner.innerHTML = tt(
+        "sec.vis.you.none",
+        "Tu visita se contabiliza. No fue posible georreferenciar la red (VPN, red privada o protección del navegador). El ranking solo muestra orígenes estimados."
+      );
+    }
   }
-  if ($("#campo-lugar")) $("#campo-lugar").value = g.lugar;
+  if ($("#campo-lugar") && g.lugar) $("#campo-lugar").value = g.lugar;
   if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
 
   if (sessionStorage.getItem(GEO_SESSION_KEY)) return;
