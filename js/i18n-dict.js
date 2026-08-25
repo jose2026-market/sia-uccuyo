@@ -1,6 +1,6 @@
 window.I18N_DICT = {
   "meta.title": { es: "SIA-UCCuyo · Semillero de Inteligencia Artificial", en: "SIA-UCCuyo · Artificial Intelligence Seedbed" },
-  "meta.description": { es: "Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos reales y comunidad. Visitas para externos.", en: "Artificial Intelligence Seedbed of Universidad Católica de Cuyo. Training, real projects and community. Visits for external guests." },
+  "meta.description": { es: "Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos reales y comunidad. Visitas al Semillero.", en: "Artificial Intelligence Seedbed of Universidad Católica de Cuyo. Training, real projects and community. Visits to the Seedbed." },
   "nav.menu": { es: "Menú", en: "Menu" },
   "nav.close": { es: "Cerrar", en: "Close" },
   "nav.inicio": { es: "Inicio", en: "Home" },
@@ -86,7 +86,7 @@ window.I18N_DICT = {
   "sec.eq.uic": { es: "Universitat Internacional de Catalunya", en: "Universitat Internacional de Catalunya" },
   "sec.eq.ver": { es: "Ver ficha en el Observatorio de IA", en: "See the profile on the AI Observatory" },
   "sec.vis.kicker": { es: "Puertas abiertas", en: "Open doors" },
-  "sec.vis.title": { es: "Visitas para externos", en: "External visits" },
+  "sec.vis.title": { es: "Visitas al Semillero", en: "Visits to the Seedbed" },
   "sec.vis.lead": { es: "Al abrir esta sección se suma 1 al contador de visitas (país y región; no se guarda la IP). El mapa y el ranking son los mismos para todas las personas. El libro de visitas es opcional: los mensajes se leen más abajo, en esta misma página.", en: "Opening this section adds 1 to the visit counter (country and region; the IP is not stored). Everyone sees the same map and ranking. The guest book is optional: messages are read further down on this same page." },
   "sec.vis.map": { es: "Contador de visitas", en: "Visit counter" },
   "sec.vis.librostat": { es: "Mensajes en el libro", en: "Guest-book messages" },
