@@ -786,7 +786,7 @@ function initForm() {
 
 function initPwa() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
   }
   var installBtn = $("#btn-install");
   var shareBtn = $("#btn-share");

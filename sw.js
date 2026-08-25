@@ -1,4 +1,4 @@
-const CACHE = "semillero-ia-v4";
+const CACHE = "semillero-ia-v5";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -13,6 +13,16 @@ const PRECACHE = [
   "./assets/logo_observatorio.png",
   "./assets/uccuyo_shield.png"
 ];
+
+function isHtmlOrCode(url) {
+  return (
+    url.pathname === "/" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css")
+  );
+}
 
 self.addEventListener("install", function (event) {
   event.waitUntil(
@@ -41,6 +51,24 @@ self.addEventListener("fetch", function (event) {
   if (req.method !== "GET") return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+
+  if (req.mode === "navigate" || isHtmlOrCode(url)) {
+    event.respondWith(
+      fetch(req).then(function (res) {
+        if (res && res.status === 200 && res.type === "basic") {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (cache) { cache.put(req, copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(req).then(function (hit) {
+          return hit || caches.match("./index.html");
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(req).then(function (hit) {
       if (hit) return hit;
@@ -49,9 +77,6 @@ self.addEventListener("fetch", function (event) {
         var copy = res.clone();
         caches.open(CACHE).then(function (cache) { cache.put(req, copy); });
         return res;
-      }).catch(function () {
-        if (req.mode === "navigate") return caches.match("./index.html");
-        return hit;
       });
     })
   );
