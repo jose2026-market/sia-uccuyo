@@ -201,10 +201,73 @@ function fetchApps(action, extra) {
   });
 }
 
+function foldGuest(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4/g, "a")
+    .replace(/@/g, "a")
+    .replace(/\$/g, "s")
+    .replace(/[^a-z\s]/g, " ")
+    .replace(/(.)\1{2,}/g, "$1$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isInstitutionalGuest(institucion, mensaje) {
+  var inst = String(institucion || "").trim();
+  var msg = String(mensaje || "").trim();
+  if (inst.length < 4 || msg.length < 20) return false;
+  if (/https?:\/\/|www\.|t\.me\/|bit\.ly|javascript:|<script/i.test(inst + " " + msg)) return false;
+  var letters = msg.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g, "");
+  var upper = msg.replace(/[^A-ZÁÉÍÓÚÜÑ]/g, "");
+  if (letters.length >= 20 && upper.length / letters.length > 0.72) return false;
+  if (/(!|\?){3,}/.test(msg)) return false;
+  var folded = foldGuest(inst + " " + msg);
+  if (!folded) return false;
+  var blocked = [
+    "puta", "puto", "putas", "putos", "putita", "putito", "hdp", "lptm",
+    "concha", "conchudo", "conchuda",
+    "pija", "pijas", "verga", "vergas", "pito",
+    "culo", "culos", "cagon", "cagona", "cagar", "cagada", "cago",
+    "mierda", "mierdas", "carajo", "carajos",
+    "forro", "forra", "forros",
+    "boludo", "boluda", "boludos", "boludas",
+    "pelotudo", "pelotuda", "pelotudos",
+    "estupido", "estupida", "idiota", "idiotas", "imbecil", "imbeciles",
+    "tarado", "tarada", "mogolico", "mogolica", "retrasado", "retrasada",
+    "sorete", "soretes", "choto", "chota", "orto",
+    "marica", "maricon", "trolo", "trola",
+    "coger", "cogiendo", "cogida", "cogido",
+    "fuck", "fucking", "shit", "asshole", "bitch", "bastard", "dick", "cunt",
+    "whore", "slut", "nigger", "retard",
+    "porno", "porn", "xxx", "nudes", "onlyfans",
+    "matate", "suicidate", "nazi", "hitler"
+  ];
+  var i;
+  for (i = 0; i < blocked.length; i++) {
+    if (new RegExp("(^| )" + blocked[i] + "( |$)", "i").test(folded)) return false;
+  }
+  var phrases = [
+    "hijo de puta", "la concha", "me chupa", "andate a", "kill yourself",
+    "go to hell", "negro de mierda"
+  ];
+  for (i = 0; i < phrases.length; i++) {
+    if (folded.indexOf(foldGuest(phrases[i])) >= 0) return false;
+  }
+  return true;
+}
+
 function applyState(data) {
   if (!data || data.ok === false) throw new Error((data && data.error) || "bad-state");
   visitas = Array.isArray(data.visitas) ? data.visitas : [];
-  libro = Array.isArray(data.libro) ? data.libro : [];
+  libro = (Array.isArray(data.libro) ? data.libro : []).filter(function (n) {
+    return isInstitutionalGuest(n && n.institucion, n && n.mensaje);
+  });
   sinGeorref = Number(data.sinGeorref) || 0;
   renderRanking();
   drawMarkers();
@@ -1105,14 +1168,36 @@ function initForm() {
   $("#form-visita").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var fd = new FormData(ev.currentTarget);
-    var extra =
-      "institucion=" + encodeURIComponent(String(fd.get("institucion") || "").trim()) +
-      "&mensaje=" + encodeURIComponent(String(fd.get("mensaje") || "").trim()) +
-      "&lugar=" + encodeURIComponent(String(fd.get("lugar") || "").trim());
+    var institucion = String(fd.get("institucion") || "").trim();
+    var mensaje = String(fd.get("mensaje") || "").trim();
+    var lugar = String(fd.get("lugar") || "").trim();
     var ok = $("#ok-visita");
+    if (!isInstitutionalGuest(institucion, mensaje)) {
+      if (ok) {
+        ok.hidden = false;
+        ok.textContent = tt(
+          "sec.vis.rejected",
+          "El mensaje no se publicó. El libro es institucional: solo se aceptan textos formales, respetuosos y sin insultos ni spam."
+        );
+      }
+      return;
+    }
+    var extra =
+      "institucion=" + encodeURIComponent(institucion) +
+      "&mensaje=" + encodeURIComponent(mensaje) +
+      "&lugar=" + encodeURIComponent(lugar);
     fetchApps("libro", extra)
-      .then(applyState)
-      .then(function () {
+      .then(function (data) {
+        if (!data || data.ok === false) {
+          if (ok) {
+            ok.hidden = false;
+            ok.textContent = data && data.error === "rejected"
+              ? tt("sec.vis.rejected", "El mensaje no se publicó. El libro es institucional: solo se aceptan textos formales, respetuosos y sin insultos ni spam.")
+              : tt("sec.vis.nobackend", "No se pudo guardar el mensaje en el backend compartido.");
+          }
+          return;
+        }
+        applyState(data);
         ev.currentTarget.reset();
         if (ok) {
           ok.hidden = false;
@@ -1121,7 +1206,7 @@ function initForm() {
         var book = $("#libro");
         if (book && book.scrollIntoView) book.scrollIntoView({ behavior: "smooth", block: "start" });
       })
-      .catch(function (err) {
+      .catch(function () {
         if (!ok) return;
         ok.hidden = false;
         ok.textContent = tt(

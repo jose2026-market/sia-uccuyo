@@ -35,6 +35,9 @@ function publicLibro(rows) {
   var i;
   for (i = 0; i < (rows || []).length; i++) {
     var n = rows[i] || {};
+    if (!isInstitutionalGuest(n.institucion, n.mensaje)) {
+      continue;
+    }
     out.push({
       institucion: n.institucion || "",
       tipo: n.tipo || "externa",
@@ -45,6 +48,84 @@ function publicLibro(rows) {
     });
   }
   return out;
+}
+
+function foldGuest(s) {
+  s = String(s || "").toLowerCase();
+  var from = "áéíóúüñàèìòùäëïöâêîôû";
+  var to = "aeiouunaeiouaeioaeiou";
+  var i;
+  var out = "";
+  for (i = 0; i < s.length; i++) {
+    var ch = s.charAt(i);
+    var idx = from.indexOf(ch);
+    if (idx >= 0) ch = to.charAt(idx);
+    if (ch === "0") ch = "o";
+    if (ch === "1") ch = "i";
+    if (ch === "3") ch = "e";
+    if (ch === "4") ch = "a";
+    if (ch === "@") ch = "a";
+    if (ch === "$") ch = "s";
+    if (!/[a-z]/.test(ch)) ch = " ";
+    out += ch;
+  }
+  return out.replace(/(.)\1{2,}/g, "$1$1").replace(/\s+/g, " ").trim();
+}
+
+function isInstitutionalGuest(institucion, mensaje) {
+  var inst = String(institucion || "").trim();
+  var msg = String(mensaje || "").trim();
+  var i;
+  if (inst.length < 4 || msg.length < 20) return false;
+  if (/https?:\/\/|www\.|t\.me\/|bit\.ly|javascript:|<script/i.test(inst + " " + msg)) return false;
+  var letters = msg.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/g, "");
+  var upper = msg.replace(/[^A-ZÁÉÍÓÚÜÑ]/g, "");
+  if (letters.length >= 20 && upper.length / letters.length > 0.72) return false;
+  if (/(!|\?){3,}/.test(msg)) return false;
+  var folded = foldGuest(inst + " " + msg);
+  if (!folded) return false;
+  var blocked = [
+    "puta", "puto", "putas", "putos", "putita", "putito", "hdp", "lptm",
+    "concha", "conchudo", "conchuda",
+    "pija", "pijas", "verga", "vergas", "pito",
+    "culo", "culos", "cagon", "cagona", "cagar", "cagada", "cago",
+    "mierda", "mierdas", "carajo", "carajos",
+    "forro", "forra", "forros",
+    "boludo", "boluda", "boludos", "boludas",
+    "pelotudo", "pelotuda", "pelotudos",
+    "estupido", "estupida", "idiota", "idiotas", "imbecil", "imbeciles",
+    "tarado", "tarada", "mogolico", "mogolica", "retrasado", "retrasada",
+    "sorete", "soretes", "choto", "chota", "orto",
+    "marica", "maricon", "trolo", "trola",
+    "coger", "cogiendo", "cogida", "cogido",
+    "fuck", "fucking", "shit", "asshole", "bitch", "bastard", "dick", "cunt",
+    "whore", "slut", "nigger", "retard",
+    "porno", "porn", "xxx", "nudes", "onlyfans",
+    "matate", "suicidate", "nazi", "hitler"
+  ];
+  for (i = 0; i < blocked.length; i++) {
+    if (new RegExp("(^| )" + blocked[i] + "( |$)", "i").test(folded)) return false;
+  }
+  var phrases = [
+    "hijo de puta", "la concha", "me chupa", "andate a", "kill yourself",
+    "go to hell", "negro de mierda"
+  ];
+  for (i = 0; i < phrases.length; i++) {
+    if (folded.indexOf(foldGuest(phrases[i])) >= 0) return false;
+  }
+  return true;
+}
+
+function migrateLibro(st) {
+  var kept = [];
+  var i;
+  for (i = 0; i < (st.libro || []).length; i++) {
+    var n = st.libro[i];
+    if (isInstitutionalGuest(n.institucion, n.mensaje)) {
+      kept.push(n);
+    }
+  }
+  st.libro = kept;
 }
 
 function isUnknownText(s) {
@@ -178,8 +259,10 @@ function handleRequest(e) {
     var st = getState();
     var n0 = st.visitas.length;
     var u0 = Number(st.sinGeorref) || 0;
+    var l0 = (st.libro || []).length;
     migrateUnknownVisits(st);
-    if (st.visitas.length !== n0 || Number(st.sinGeorref) !== u0) {
+    migrateLibro(st);
+    if (st.visitas.length !== n0 || Number(st.sinGeorref) !== u0 || (st.libro || []).length !== l0) {
       saveState(st);
     }
 
@@ -254,6 +337,9 @@ function handleRequest(e) {
       };
       if (!row.institucion || !row.mensaje) {
         return jsonOut({ ok: false, error: "incomplete" }, callback);
+      }
+      if (!isInstitutionalGuest(row.institucion, row.mensaje)) {
+        return jsonOut({ ok: false, error: "rejected" }, callback);
       }
       st.libro.push(row);
       saveState(st);

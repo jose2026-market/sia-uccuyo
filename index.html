@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/styles.css?v=7" />
+  <link rel="stylesheet" href="css/styles.css?v=8" />
 </head>
 <body>
   <a class="skip" href="#inicio" data-i18n="skip">Ir al contenido</a>
@@ -76,8 +76,14 @@
         <a class="btn-3d gold" href="#visitas" data-i18n="nav.cta.visitar">Visitar</a>
       </div>
       <div class="lang-switcher top" role="group" aria-label="Idioma / Language">
-        <button type="button" class="btn-3d lang is-active" data-lang="es">ES</button>
-        <button type="button" class="btn-3d lang" data-lang="en">EN</button>
+        <button type="button" class="btn-3d lang is-active" data-lang="es" aria-label="Página en español">
+          <span class="flag flag-ar" aria-hidden="true"></span>
+          <span>ES</span>
+        </button>
+        <button type="button" class="btn-3d lang" data-lang="en" aria-label="English page">
+          <span class="flag flag-gb" aria-hidden="true"></span>
+          <span>EN</span>
+        </button>
       </div>
     </div>
   </header>
@@ -100,7 +106,7 @@
         <div class="btn-row">
           <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener" data-i18n="hero.cta">Inscribite ahora</a>
           <a class="btn-3d gold" href="#visitas" data-i18n="hero.visit">Soy visitante</a>
-          <a class="btn-3d ghost hero-ghost" href="#formacion" data-i18n="hero.formarse">Ver formación</a>
+          <a class="btn-3d cream" href="#formacion" data-i18n="hero.formarse">Ver formación</a>
         </div>
       </div>
       <div class="hero-photo">
@@ -305,7 +311,7 @@
 
       <article class="card goldbar" style="margin-top:22px">
         <h3 data-i18n="sec.vis.book">Libro de visitas (opcional)</h3>
-        <p data-i18n="sec.vis.bookp">El mensaje se publica acá abajo, en esta misma página, para que lo lea cualquiera que entre. Bastan institución y texto. No se publica el nombre ni el correo.</p>
+        <p data-i18n="sec.vis.bookp">El mensaje se publica acá abajo. Solo se aceptan textos formales e institucionales: respetuosos, sin insultos ni spam. No se publica el nombre ni el correo.</p>
         <form class="visit" id="form-visita">
           <label><span data-i18n="sec.vis.inst">Institución</span>
             <input name="institucion" required placeholder="Universidad / organismo / colegio" />
@@ -398,9 +404,9 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/config.js?v=7"></script>
-  <script src="js/i18n-dict.js?v=7"></script>
-  <script src="js/i18n.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/config.js?v=8"></script>
+  <script src="js/i18n-dict.js?v=8"></script>
+  <script src="js/i18n.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>
