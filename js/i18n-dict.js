@@ -1,6 +1,8 @@
 window.I18N_DICT = {
   "meta.title": { es: "SIA-UCCuyo · Semillero de Inteligencia Artificial", en: "SIA-UCCuyo · Artificial Intelligence Seedbed" },
   "meta.description": { es: "Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos reales y comunidad. Visitas para externos.", en: "Artificial Intelligence Seedbed of Universidad Católica de Cuyo. Training, real projects and community. Visits for external guests." },
+  "nav.menu": { es: "Índice", en: "Index" },
+  "nav.close": { es: "Cerrar", en: "Close" },
   "nav.inicio": { es: "Inicio", en: "Home" },
   "nav.semillero": { es: "El semillero", en: "The seedbed" },
   "nav.numeros": { es: "El Semillero en números", en: "The Seedbed in numbers" },

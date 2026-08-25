@@ -29,6 +29,7 @@
         <p class="kicker">Observatorio de IA</p>
         <h1>Semillero de IA</h1>
       </div>
+      <button type="button" class="nav-close" id="nav-close" aria-label="Cerrar índice">×</button>
     </div>
     <div class="lang-switcher" role="group" aria-label="Idioma / Language">
       <button type="button" class="btn-3d lang is-active" data-lang="es">Página en español</button>
@@ -56,14 +57,18 @@
   </aside>
 
   <header class="topbar">
+    <button class="burger" id="burger" type="button" aria-controls="sidebar" aria-expanded="false">
+      <span class="burger-ico" aria-hidden="true">☰</span>
+      <span data-i18n="nav.menu">Índice</span>
+    </button>
     <img src="assets/logo_observatorio.png" alt="Observatorio de IA" />
-    <strong>SIA-UCCuyo</strong>
+    <strong>Semillero IA</strong>
     <div class="lang-switcher top" role="group" aria-label="Idioma / Language">
-      <button type="button" class="btn-3d lang is-active" data-lang="es">Página en español</button>
-      <button type="button" class="btn-3d lang" data-lang="en">Página en inglés</button>
+      <button type="button" class="btn-3d lang is-active" data-lang="es">ES</button>
+      <button type="button" class="btn-3d lang" data-lang="en">EN</button>
     </div>
-    <button class="burger" id="burger" type="button" aria-label="Abrir menú">☰</button>
   </header>
+  <div class="nav-overlay" id="nav-overlay" hidden></div>
 
   <main class="wrap">
     <section class="hero" id="inicio">

@@ -648,10 +648,31 @@ function initMap() {
 
 function initNav() {
   var links = $$("nav.menu a");
-  var sidebar = $(".sidebar");
-  $("#burger")?.addEventListener("click", function () { sidebar.classList.toggle("open"); });
+  var sidebar = $("#sidebar");
+  var overlay = $("#nav-overlay");
+  var burger = $("#burger");
+  var closeBtn = $("#nav-close");
+
+  function setNav(open) {
+    if (!sidebar) return;
+    sidebar.classList.toggle("open", open);
+    document.body.classList.toggle("nav-open", open);
+    if (overlay) overlay.hidden = !open;
+    if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  if (burger) {
+    burger.addEventListener("click", function () {
+      setNav(!sidebar.classList.contains("open"));
+    });
+  }
+  if (closeBtn) closeBtn.addEventListener("click", function () { setNav(false); });
+  if (overlay) overlay.addEventListener("click", function () { setNav(false); });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") setNav(false);
+  });
   links.forEach(function (a) {
-    a.addEventListener("click", function () { sidebar.classList.remove("open"); });
+    a.addEventListener("click", function () { setNav(false); });
   });
   var io = new IntersectionObserver(function (entries) {
     var vis = entries.filter(function (e) { return e.isIntersecting; }).sort(function (a, b) {
@@ -664,7 +685,6 @@ function initNav() {
   }, { rootMargin: "-35% 0px -50% 0px", threshold: [0.1, 0.3, 0.6] });
   $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
 }
-
 function initCounters() {
   [["#c-inscriptos", 6], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
     var el = $(pair[0]);
