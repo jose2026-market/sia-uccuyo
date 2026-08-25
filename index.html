@@ -22,50 +22,63 @@
 <body>
   <a class="skip" href="#inicio" data-i18n="skip">Ir al contenido</a>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <img src="assets/logo_observatorio.png" alt="Logo del Observatorio de Inteligencia Artificial" />
-      <div>
-        <p class="kicker">Observatorio de IA</p>
-        <h1>Semillero de IA</h1>
+  <header class="site-header" id="site-header">
+    <div class="header-bar">
+      <button class="burger" id="burger" type="button" aria-controls="nav-panel" aria-expanded="false">
+        <span class="burger-ico" aria-hidden="true">☰</span>
+        <span data-i18n="nav.menu">Menú</span>
+      </button>
+      <a class="brand-link" href="#inicio">
+        <img src="assets/logo_observatorio.png" alt="" />
+        <span>
+          <small>Observatorio de IA</small>
+          <strong>Semillero IA</strong>
+        </span>
+      </a>
+      <nav class="nav-panel" id="nav-panel" aria-label="Secciones">
+        <div class="nav-panel-head">
+          <span data-i18n="nav.menu">Menú</span>
+          <button type="button" class="nav-close" id="nav-close" aria-label="Cerrar menú">×</button>
+        </div>
+        <ul class="menu-root">
+          <li class="has-sub" data-pillar="semillero">
+            <button type="button" data-i18n="nav.pillar.semillero">El Semillero</button>
+            <ul>
+              <li><a href="#equipo" data-i18n="nav.equipo">Equipo</a></li>
+              <li><a href="#semillero" data-i18n="nav.que">Qué hacemos</a></li>
+              <li><a href="#numeros" data-i18n="nav.numeros">Números</a></li>
+            </ul>
+          </li>
+          <li class="has-sub" data-pillar="formarse">
+            <button type="button" data-i18n="nav.pillar.formarse">Formarse</button>
+            <ul>
+              <li><a href="#formacion" data-i18n="nav.formacion">Formación</a></li>
+              <li><a href="#convocatoria" data-i18n="nav.convocatoria">Convocatoria</a></li>
+              <li><a href="#lineas" data-i18n="nav.lineas">Líneas de trabajo</a></li>
+            </ul>
+          </li>
+          <li data-pillar="visitas"><a href="#visitas" data-i18n="nav.visitas">Visitas</a></li>
+          <li data-pillar="comunidad"><a href="#galeria" data-i18n="nav.galeria">Comunidad</a></li>
+          <li data-pillar="contacto"><a href="#contacto" data-i18n="nav.contacto">Contacto</a></li>
+        </ul>
+        <div class="drawer-cta">
+          <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener" data-i18n="hero.cta">Inscribite ahora</a>
+          <a class="btn-3d gold" href="#visitas" data-i18n="nav.cta.visitar">Visitar</a>
+        </div>
+        <div class="app-actions">
+          <button type="button" class="btn-3d gold" id="btn-install" hidden data-i18n="app.install">Instalar app</button>
+          <button type="button" class="btn-3d" id="btn-share" data-i18n="app.share">Compartir Semillero IA</button>
+          <p class="app-hint" id="app-hint" data-i18n="app.hint">En el celular: menú del navegador → Instalar app / Agregar a inicio. El ícono se llama Semillero IA.</p>
+        </div>
+      </nav>
+      <div class="header-cta">
+        <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener" data-i18n="nav.cta.inscribir">Inscribite</a>
+        <a class="btn-3d gold" href="#visitas" data-i18n="nav.cta.visitar">Visitar</a>
       </div>
-      <button type="button" class="nav-close" id="nav-close" aria-label="Cerrar índice">×</button>
-    </div>
-    <div class="lang-switcher" role="group" aria-label="Idioma / Language">
-      <button type="button" class="btn-3d lang is-active" data-lang="es">Página en español</button>
-      <button type="button" class="btn-3d lang" data-lang="en">Página en inglés</button>
-    </div>
-    <nav class="menu" aria-label="Secciones">
-      <a href="#inicio" class="active" data-i18n="nav.inicio">Inicio</a>
-      <a href="#equipo" data-i18n="nav.equipo">Equipo ejecutivo</a>
-      <a href="#semillero" data-i18n="nav.semillero">El semillero</a>
-      <a href="#numeros" data-i18n="nav.numeros">El Semillero en números</a>
-      <a href="#formacion" data-i18n="nav.formacion">Formación</a>
-      <a href="#convocatoria" data-i18n="nav.convocatoria">Convocatoria</a>
-      <a href="#lineas" data-i18n="nav.lineas">Líneas de trabajo</a>
-      <a href="#visitas" data-i18n="nav.visitas">Visitas para externos</a>
-      <a href="#galeria" data-i18n="nav.galeria">Galería</a>
-      <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
-      <a href="https://claudiomlarrea.github.io/observatorio-ia/#equipo" target="_blank" rel="noopener" data-i18n="nav.observatorio">Observatorio de IA</a>
-    </nav>
-    <div class="app-actions">
-      <button type="button" class="btn-3d gold" id="btn-install" hidden data-i18n="app.install">Instalar app</button>
-      <button type="button" class="btn-3d" id="btn-share" data-i18n="app.share">Compartir Semillero IA</button>
-      <p class="app-hint" id="app-hint" data-i18n="app.hint">En el celular: menú del navegador → Instalar app / Agregar a inicio. El ícono se llama Semillero IA.</p>
-    </div>
-    <p class="foot" data-i18n="nav.foot">Observatorio de IA · Secretaría de Investigación y Vinculación Tecnológica · Sede San Luis</p>
-  </aside>
-
-  <header class="topbar">
-    <button class="burger" id="burger" type="button" aria-controls="sidebar" aria-expanded="false">
-      <span class="burger-ico" aria-hidden="true">☰</span>
-      <span data-i18n="nav.menu">Índice</span>
-    </button>
-    <img src="assets/logo_observatorio.png" alt="Observatorio de IA" />
-    <strong>Semillero IA</strong>
-    <div class="lang-switcher top" role="group" aria-label="Idioma / Language">
-      <button type="button" class="btn-3d lang is-active" data-lang="es">ES</button>
-      <button type="button" class="btn-3d lang" data-lang="en">EN</button>
+      <div class="lang-switcher top" role="group" aria-label="Idioma / Language">
+        <button type="button" class="btn-3d lang is-active" data-lang="es">ES</button>
+        <button type="button" class="btn-3d lang" data-lang="en">EN</button>
+      </div>
     </div>
   </header>
   <div class="nav-overlay" id="nav-overlay" hidden></div>
@@ -86,7 +99,8 @@
         </div>
         <div class="btn-row">
           <a class="btn-3d" data-inscripcion href="#" target="_blank" rel="noopener" data-i18n="hero.cta">Inscribite ahora</a>
-          <a class="btn-3d gold" href="#visitas" data-i18n="hero.visit">Soy visitante externo</a>
+          <a class="btn-3d gold" href="#visitas" data-i18n="hero.visit">Soy visitante</a>
+          <a class="btn-3d ghost hero-ghost" href="#formacion" data-i18n="hero.formarse">Ver formación</a>
         </div>
       </div>
       <div class="hero-photo">
@@ -352,9 +366,34 @@
   </main>
 
   <footer class="site">
-    <p><strong>SIA-UCCuyo</strong> · <span data-i18n="foot.line1">Semillero de Inteligencia Artificial</span></p>
-    <p data-i18n="foot.line2">Identidad visual según el Manual de Normas UCCuyo 1.0 (2017): verde institucional #064A31, bordeaux #7D1B1C y oro #E38A00. Tipografías Droid Serif y Montserrat.</p>
-    <p data-i18n="foot.line3">Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por país y región; no se guarda la IP.</p>
+    <div class="foot-grid">
+      <div>
+        <p class="kicker">SIA-UCCuyo</p>
+        <p><strong data-i18n="foot.line1">Semillero de Inteligencia Artificial</strong></p>
+        <p data-i18n="nav.foot">Observatorio de IA · Secretaría de Investigación y Vinculación Tecnológica · Sede San Luis</p>
+      </div>
+      <div>
+        <p class="kicker" data-i18n="nav.pillar.semillero">El Semillero</p>
+        <a href="#equipo" data-i18n="nav.equipo">Equipo</a>
+        <a href="#semillero" data-i18n="nav.que">Qué hacemos</a>
+        <a href="#numeros" data-i18n="nav.numeros">Números</a>
+      </div>
+      <div>
+        <p class="kicker" data-i18n="nav.pillar.formarse">Formarse</p>
+        <a href="#formacion" data-i18n="nav.formacion">Formación</a>
+        <a href="#convocatoria" data-i18n="nav.convocatoria">Convocatoria</a>
+        <a href="#lineas" data-i18n="nav.lineas">Líneas de trabajo</a>
+      </div>
+      <div>
+        <p class="kicker" data-i18n="foot.col.mas">Más</p>
+        <a href="#visitas" data-i18n="nav.visitas">Visitas</a>
+        <a href="#galeria" data-i18n="nav.galeria">Comunidad</a>
+        <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
+        <a href="https://claudiomlarrea.github.io/observatorio-ia/" data-observatorio target="_blank" rel="noopener" data-i18n="nav.observatorio">Observatorio de IA</a>
+        <a href="mailto:observatorioia@uccuyo.edu.ar" data-i18n="nav.secretaria">Secretaría</a>
+      </div>
+    </div>
+    <p class="foot-note" data-i18n="foot.line3">Los botones bordó 3D son el color subordinado del manual. Mapa: OpenStreetMap · origen estimado por país y región; no se guarda la IP.</p>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

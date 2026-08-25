@@ -647,23 +647,36 @@ function initMap() {
 }
 
 function initNav() {
-  var links = $$("nav.menu a");
-  var sidebar = $("#sidebar");
+  var header = $("#site-header");
+  var panel = $("#nav-panel");
   var overlay = $("#nav-overlay");
   var burger = $("#burger");
   var closeBtn = $("#nav-close");
+  var links = $$(".menu-root a, .drawer-cta a[href^='#']");
+  var pillars = $$(".menu-root [data-pillar]");
+  var PILLAR = {
+    inicio: "semillero",
+    equipo: "semillero",
+    semillero: "semillero",
+    numeros: "semillero",
+    formacion: "formarse",
+    convocatoria: "formarse",
+    lineas: "formarse",
+    visitas: "visitas",
+    galeria: "comunidad",
+    contacto: "contacto"
+  };
 
   function setNav(open) {
-    if (!sidebar) return;
-    sidebar.classList.toggle("open", open);
     document.body.classList.toggle("nav-open", open);
+    if (header) header.classList.toggle("nav-open", open);
     if (overlay) overlay.hidden = !open;
     if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
   if (burger) {
     burger.addEventListener("click", function () {
-      setNav(!sidebar.classList.contains("open"));
+      setNav(!document.body.classList.contains("nav-open"));
     });
   }
   if (closeBtn) closeBtn.addEventListener("click", function () { setNav(false); });
@@ -671,16 +684,38 @@ function initNav() {
   document.addEventListener("keydown", function (ev) {
     if (ev.key === "Escape") setNav(false);
   });
+
+  $$(".has-sub > button").forEach(function (btn) {
+    btn.addEventListener("click", function (ev) {
+      if (window.matchMedia("(max-width: 1100px)").matches) {
+        ev.preventDefault();
+        var li = btn.parentElement;
+        var open = !li.classList.contains("open");
+        $$(".has-sub").forEach(function (x) { x.classList.remove("open"); });
+        if (open) li.classList.add("open");
+      }
+    });
+  });
+
   links.forEach(function (a) {
     a.addEventListener("click", function () { setNav(false); });
   });
+  $$(".foot-grid a[href^='#']").forEach(function (a) {
+    a.addEventListener("click", function () { setNav(false); });
+  });
+
   var io = new IntersectionObserver(function (entries) {
     var vis = entries.filter(function (e) { return e.isIntersecting; }).sort(function (a, b) {
       return b.intersectionRatio - a.intersectionRatio;
     })[0];
     if (!vis) return;
-    links.forEach(function (a) {
-      a.classList.toggle("active", a.getAttribute("href") === "#" + vis.target.id);
+    var id = vis.target.id;
+    var pillar = PILLAR[id];
+    $$(".menu-root a").forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+    });
+    pillars.forEach(function (li) {
+      li.classList.toggle("active", li.getAttribute("data-pillar") === pillar);
     });
   }, { rootMargin: "-35% 0px -50% 0px", threshold: [0.1, 0.3, 0.6] });
   $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
