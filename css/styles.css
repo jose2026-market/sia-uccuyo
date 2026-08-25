@@ -442,7 +442,7 @@ h2.titulo {
   font-size: 20px;
 }
 .card h3.book-title {
-  margin-top: 36px;
+  margin-top: 48px;
   font-size: 18px;
 }
 .card p, .card li { color: var(--muted); font-size: 14px; }
@@ -631,7 +631,7 @@ h2.titulo {
 .rank-more:hover { background: #fff4e0; border-color: var(--oro); }
 .rank-more[hidden] { display: none !important; }
 .book-title {
-  margin: 36px 0 8px;
+  margin: 48px 0 8px;
   font-size: 16px;
   clear: both;
 }
@@ -640,11 +640,12 @@ form.visit {
   display: grid;
   gap: 10px;
   grid-template-columns: 1fr 1fr;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
 }
 form.visit .full { grid-column: 1 / -1; }
 form.visit .btn-row {
-  padding-bottom: 20px;
+  padding-bottom: 36px;
+  margin-bottom: 8px;
   align-items: flex-start;
 }
 label { font-size: 12px; font-weight: 700; color: var(--verde); display: grid; gap: 4px; }
