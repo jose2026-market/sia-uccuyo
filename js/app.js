@@ -507,14 +507,99 @@ function renderCollapsedList(ul, items, kind) {
       "</span><b>" + (r.n || 0) + "</b></li>"
     );
   }).join("");
+  bindOriginClicks(ul, items, kind);
+}
+
+function countryCoords(sample) {
+  var parts = originParts(sample || {});
+  if (CENTROIDS[parts.code]) {
+    var c = CENTROIDS[parts.code];
+    return [c[1], c[0]];
+  }
+  return coordsFor({
+    country: parts.code,
+    countryName: parts.country,
+    region: "",
+    city: "",
+    lugar: parts.country,
+    lat: 0,
+    lon: 0
+  });
+}
+
+function groupRegionsByCountry(regiones) {
+  var bag = {};
+  regiones.forEach(function (item) {
+    var parts = originParts(item.sample || {});
+    var ck = countryKey(parts);
+    if (!bag[ck]) {
+      bag[ck] = {
+        key: ck,
+        country: parts.country,
+        n: 0,
+        regions: [],
+        sample: item.sample
+      };
+    }
+    bag[ck].regions.push(item);
+    bag[ck].n += Number(item.n) || 0;
+  });
+  return Object.keys(bag).map(function (k) { return bag[k]; }).sort(function (a, b) {
+    if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+    return String(a.country || "").localeCompare(String(b.country || ""), "es");
+  }).map(function (g) {
+    g.regions.sort(function (a, b) {
+      if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+      return String(a.label || "").localeCompare(String(b.label || ""), "es");
+    });
+    return g;
+  });
+}
+
+function renderRegionGroups(ul, groups) {
+  if (!ul) return;
+  if (!groups.length) {
+    ul.innerHTML = '<li class="empty">' + escapeHtml(tt("sec.vis.empty", "Todavía no hay orígenes en el mapa compartido.")) + "</li>";
+    return;
+  }
+  var items = [];
+  var html = groups.map(function (g) {
+    var pid = "pais:" + g.key;
+    items.push({
+      id: pid,
+      n: g.n,
+      label: g.country,
+      sample: g.sample,
+      kind: "paises"
+    });
+    var head =
+      '<li class="origin-group" data-kind="paises" data-id="' + escapeHtml(pid) + '">' +
+      '<span class="origin-copy"><strong>' + escapeHtml(g.country) + "</strong></span>" +
+      "<b>" + (g.n || 0) + "</b></li>";
+    var kids = g.regions.map(function (r) {
+      items.push(r);
+      return (
+        '<li class="origin-child" data-kind="regiones" data-id="' + escapeHtml(r.id) + '">' +
+        '<span class="origin-copy"><strong>' + escapeHtml(r.label) + "</strong></span>" +
+        "<b>" + (r.n || 0) + "</b></li>"
+      );
+    }).join("");
+    return head + kids;
+  }).join("");
+  ul.innerHTML = html;
+  bindOriginClicks(ul, items);
+}
+
+function bindOriginClicks(ul, items, kind) {
   $$("li[data-id]", ul).forEach(function (li) {
     li.addEventListener("click", function () {
       $$(".origin-list li").forEach(function (x) { x.classList.remove("on"); });
       li.classList.add("on");
       var row = items.find(function (v) { return v.id === li.dataset.id; });
+      var zoomKind = (row && row.kind) || li.getAttribute("data-kind") || kind;
       if (row && map) {
-        var ll = coordsFor(row.sample || row);
-        if (ll) map.setView(ll, kind === "paises" ? 4 : 6);
+        var ll = zoomKind === "paises" ? countryCoords(row.sample || row) : coordsFor(row.sample || row);
+        if (ll) map.setView(ll, zoomKind === "paises" ? 4 : 6);
       }
     });
   });
@@ -540,15 +625,11 @@ function renderRanking() {
     rows,
     function (_r, p) { return "reg:" + countryKey(p) + "|" + String(p.region || "").toLowerCase(); },
     function (_r, p) { return p.region; }
-  ).map(function (item) {
-    var parts = originParts(item.sample || {});
-    item.sub = parts.country;
-    return item;
-  }).filter(function (item) {
+  ).filter(function (item) {
     return foldName(item.label) !== noReg && !isUnknownLabel(item.label);
   });
   renderCollapsedList($("#ranking-paises"), paises, "paises");
-  renderCollapsedList($("#ranking-regiones"), regiones, "regiones");
+  renderRegionGroups($("#ranking-regiones"), groupRegionsByCountry(regiones));
   setCountLabel("#n-paises", paises.length);
   setCountLabel("#n-regiones", regiones.length);
   var t = totals(visitas);

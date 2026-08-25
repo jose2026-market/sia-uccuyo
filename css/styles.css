@@ -546,6 +546,20 @@ h2.titulo {
 }
 .origin-list li:last-child { border-bottom: 0; }
 .origin-list li:hover, .origin-list li.on { background: #fff4e0; }
+.origin-list li.origin-group {
+  background: #eef4f0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.origin-list li.origin-group strong {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--verde);
+}
+.origin-list li.origin-group:hover,
+.origin-list li.origin-group.on { background: #e4eee8; }
+.origin-list li.origin-child { padding-left: 26px; }
 .origin-copy {
   display: flex;
   flex-direction: column;

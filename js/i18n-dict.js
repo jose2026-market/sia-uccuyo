@@ -92,7 +92,7 @@ window.I18N_DICT = {
   "sec.vis.librostat": { es: "Mensajes en el libro", en: "Guest-book messages" },
   "sec.vis.rank": { es: "Ranking de orígenes", en: "Origin ranking" },
   "sec.vis.paises": { es: "Países", en: "Countries" },
-  "sec.vis.regiones": { es: "Provincias y regiones", en: "Provinces and regions" },
+  "sec.vis.regiones": { es: "Provincias y regiones por país", en: "Provinces and regions by country" },
   "sec.vis.more": { es: "Ver más ({n})", en: "Show more ({n})" },
   "sec.vis.less": { es: "Ver menos", en: "Show less" },
   "sec.vis.nopais": { es: "Sin país", en: "Unknown country" },
