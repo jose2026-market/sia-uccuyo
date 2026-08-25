@@ -729,12 +729,60 @@ function initForm() {
   });
 }
 
+function initPwa() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
+  var installBtn = $("#btn-install");
+  var shareBtn = $("#btn-share");
+  var hint = $("#app-hint");
+  var deferred;
+  window.addEventListener("beforeinstallprompt", function (ev) {
+    ev.preventDefault();
+    deferred = ev;
+    if (installBtn) installBtn.hidden = false;
+  });
+  if (installBtn) {
+    installBtn.addEventListener("click", function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.finally(function () {
+        deferred = null;
+        installBtn.hidden = true;
+      });
+    });
+  }
+  window.addEventListener("appinstalled", function () {
+    if (installBtn) installBtn.hidden = true;
+  });
+  if (shareBtn) {
+    shareBtn.addEventListener("click", function () {
+      var url = "https://jose2026-market.github.io/sia-uccuyo/";
+      var title = tt("app.sharetext", "Semillero IA — Universidad Católica de Cuyo");
+      if (navigator.share) {
+        navigator.share({ title: "Semillero IA", text: title, url: url }).catch(function () {});
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          if (hint) hint.textContent = tt("app.copied", "Enlace copiado. Pegalo en WhatsApp o mail para compartir la app.");
+        }).catch(function () {
+          window.prompt(title, url);
+        });
+        return;
+      }
+      window.prompt(title, url);
+    });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   initNav();
   initMap();
   initCounters();
   initScopeTabs();
   initForm();
+  initPwa();
   loadSharedState()
     .catch(function () {
       var banner = $("#banner-you");

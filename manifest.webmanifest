@@ -1,0 +1,28 @@
+{
+  "id": "/sia-uccuyo/",
+  "name": "Semillero IA",
+  "short_name": "Semillero IA",
+  "description": "Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos y visitas.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#042F23",
+  "theme_color": "#064A31",
+  "lang": "es-AR",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

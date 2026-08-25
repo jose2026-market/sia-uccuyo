@@ -156,6 +156,24 @@ nav.menu a.active { box-shadow: inset 3px 0 0 var(--oro); }
   font-size: 11px;
   color: #b7c9c0;
 }
+.app-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px 4px;
+}
+.app-actions .btn-3d {
+  width: 100%;
+  font-size: 12px;
+  padding: 0.62rem 0.7rem;
+}
+.app-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #b7c9c0;
+  font-weight: 600;
+}
 
 .topbar {
   display: none;

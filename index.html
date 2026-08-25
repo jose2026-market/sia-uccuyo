@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SIA-UCCuyo · Semillero de Inteligencia Artificial</title>
   <meta name="description" content="Semillero de Inteligencia Artificial de la Universidad Católica de Cuyo. Formación, proyectos reales y comunidad. Visitas para externos." />
-  <link rel="icon" href="assets/uccuyo_shield.png" />
+  <meta name="theme-color" content="#064A31" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Semillero IA" />
+  <meta name="application-name" content="Semillero IA" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -40,6 +47,11 @@
       <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
       <a href="https://claudiomlarrea.github.io/observatorio-ia/#equipo" target="_blank" rel="noopener" data-i18n="nav.observatorio">Observatorio de IA</a>
     </nav>
+    <div class="app-actions">
+      <button type="button" class="btn-3d gold" id="btn-install" hidden data-i18n="app.install">Instalar app</button>
+      <button type="button" class="btn-3d" id="btn-share" data-i18n="app.share">Compartir Semillero IA</button>
+      <p class="app-hint" id="app-hint" data-i18n="app.hint">En el celular: menú del navegador → Instalar app / Agregar a inicio. El ícono se llama Semillero IA.</p>
+    </div>
     <p class="foot" data-i18n="nav.foot">Observatorio de IA · Secretaría de Investigación y Vinculación Tecnológica · Sede San Luis</p>
   </aside>
 
