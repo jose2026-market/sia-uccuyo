@@ -21,13 +21,17 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   color: var(--tinta);
   background: var(--crema);
   font-family: Montserrat, "Segoe UI", sans-serif;
   line-height: 1.5;
+  overflow-x: hidden;
+}
+button, a.btn-3d, .burger, .filter, .rank-more {
+  touch-action: manipulation;
 }
 
 img { max-width: 100%; display: block; }
@@ -810,4 +814,61 @@ footer.site a:hover { color: #fff; }
   footer.site { padding: 28px 18px; }
   .gallery { grid-template-columns: 1fr 1fr; grid-template-rows: 160px 160px 160px; }
   .gallery img:first-child { grid-row: auto; grid-column: 1 / -1; height: 200px; }
+  .site-header { padding-top: env(safe-area-inset-top, 0px); }
+  .header-bar { gap: 8px; padding: 8px 12px; }
+  .brand-link small { display: none; }
+  .lang-switcher.top .btn-3d.lang {
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    font-size: 11px;
+  }
+  .drawer-cta .btn-3d,
+  .app-actions .btn-3d { width: 100%; }
+  .menu-root > li > a,
+  .menu-root > li > button { min-height: 44px; }
+  .nav-panel {
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  .hero .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero .btn-3d { width: 100%; justify-content: center; }
+  form.visit .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  form.visit .btn-row .btn-3d { width: 100%; justify-content: center; }
+  #map { height: 260px; }
+  input, select, textarea { font-size: 16px; }
+  section.panel, .hero {
+    scroll-margin-top: calc(var(--header) + env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (max-width: 640px) {
+  .burger-label { display: none; }
+  .burger { min-width: 44px; padding: 0 10px; justify-content: center; }
+  .brand-link img { width: 36px; height: 36px; }
+  .brand-link strong { font-size: 14px; }
+  .hero-copy { padding: 24px 16px 32px; }
+  .hero-copy p { font-size: 16px; }
+  section.panel { padding: 28px 14px 40px; }
+  .foot-grid { grid-template-columns: 1fr; }
+  footer.site {
+    padding: 24px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  .gallery { grid-template-columns: 1fr; grid-template-rows: none; }
+  .gallery img, .gallery img:first-child {
+    grid-column: auto;
+    height: 180px;
+  }
+  .team-grid { grid-template-columns: 1fr; }
+  .stat b { font-size: 28px; }
+}
+
+@media (display-mode: standalone) {
+  .app-hint { display: none; }
 }

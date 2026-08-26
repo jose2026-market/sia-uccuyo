@@ -1054,6 +1054,11 @@ function maybeCountVisit() {
   if (visible) geolocalizar();
 }
 
+function refreshMap() {
+  if (!map) return;
+  setTimeout(function () { map.invalidateSize(); }, 280);
+}
+
 function initMap() {
   map = L.map("map", { scrollWheelZoom: false }).setView([-33.3, -66.3], 4);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -1062,7 +1067,9 @@ function initMap() {
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
   drawMarkers();
-  setTimeout(function () { map.invalidateSize(); }, 250);
+  refreshMap();
+  window.addEventListener("resize", refreshMap);
+  window.addEventListener("orientationchange", refreshMap);
 }
 
 function initNav() {
@@ -1091,6 +1098,7 @@ function initNav() {
     if (header) header.classList.toggle("nav-open", open);
     if (overlay) overlay.hidden = !open;
     if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open) refreshMap();
   }
 
   if (burger) {
@@ -1233,12 +1241,31 @@ function initPwa() {
   var shareBtn = $("#btn-share");
   var hint = $("#app-hint");
   var deferred;
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent || "") ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (standalone) {
+    document.documentElement.classList.add("is-standalone");
+    if (installBtn) installBtn.hidden = true;
+    if (hint) hint.hidden = true;
+  } else if (ios) {
+    if (installBtn) installBtn.hidden = false;
+    if (hint) hint.textContent = tt("app.hint.ios", "En iPhone: botón Compartir → Agregar a pantalla de inicio. El ícono se llama Semillero IA.");
+    if (installBtn) {
+      installBtn.addEventListener("click", function () {
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent = tt("app.hint.ios", "En iPhone: botón Compartir → Agregar a pantalla de inicio. El ícono se llama Semillero IA.");
+        }
+      });
+    }
+  }
   window.addEventListener("beforeinstallprompt", function (ev) {
     ev.preventDefault();
     deferred = ev;
     if (installBtn) installBtn.hidden = false;
   });
-  if (installBtn) {
+  if (installBtn && !ios) {
     installBtn.addEventListener("click", function () {
       if (!deferred) return;
       deferred.prompt();
@@ -1299,7 +1326,10 @@ document.addEventListener("DOMContentLoaded", function () {
         ioVis.observe(vis);
       }
     });
-  window.addEventListener("hashchange", maybeCountVisit);
+  window.addEventListener("hashchange", function () {
+    maybeCountVisit();
+    if (String(location.hash || "").replace(/^#/, "") === "visitas") refreshMap();
+  });
   $$("[data-inscripcion]").forEach(function (a) { a.href = INSCRIPCION; });
   $$("[data-observatorio]").forEach(function (a) { a.href = OBSERVATORIO; });
 });
