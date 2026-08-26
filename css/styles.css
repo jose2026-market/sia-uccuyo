@@ -28,8 +28,8 @@ body {
   background: var(--crema);
   font-family: Montserrat, "Segoe UI", sans-serif;
   line-height: 1.5;
-  overflow-x: hidden;
 }
+main.wrap { overflow-x: hidden; }
 button, a.btn-3d, .burger, .filter, .rank-more {
   touch-action: manipulation;
 }
@@ -750,21 +750,39 @@ footer.site a:hover { color: #fff; }
   .nav-close { display: grid; place-items: center; }
   .nav-panel {
     position: fixed;
-    inset: 0 auto 0 0;
+    top: 0;
+    left: 0;
+    bottom: 0;
     width: min(320px, 88vw);
+    height: 100dvh;
+    max-height: 100dvh;
     background: var(--verde-oscuro);
     border-right: 4px solid var(--oro);
     transform: translateX(-110%);
-    transition: transform .2s ease;
-    z-index: 80;
+    transition: transform .2s ease, visibility .2s ease;
+    z-index: 90;
     overflow: auto;
     display: flex;
     flex-direction: column;
     box-shadow: 8px 0 24px rgba(0,0,0,.28);
     flex: none;
+    visibility: hidden;
+    pointer-events: none;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    -webkit-overflow-scrolling: touch;
+  }
+  body.nav-open .site-header { z-index: 80; }
+  .site-header.nav-open .nav-panel,
+  body.nav-open .nav-panel,
+  body > .nav-panel.nav-panel {
+    z-index: 90;
   }
   .site-header.nav-open .nav-panel,
-  body.nav-open .nav-panel { transform: none; }
+  body.nav-open .nav-panel {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
   .menu-root {
     flex-direction: column;
     align-items: stretch;
@@ -786,7 +804,7 @@ footer.site a:hover { color: #fff; }
   }
   .has-sub:hover > ul,
   .has-sub:focus-within > ul { display: none; }
-  .has-sub.open > ul { display: block; }
+  .has-sub.open > ul { display: block !important; }
   .app-actions {
     display: flex;
     flex-direction: column;
@@ -801,7 +819,7 @@ footer.site a:hover { color: #fff; }
     position: fixed;
     inset: 0;
     background: rgba(4, 23, 17, .55);
-    z-index: 70;
+    z-index: 40;
   }
   .nav-overlay[hidden] { display: none; }
   body.nav-open { overflow: hidden; }
@@ -826,11 +844,6 @@ footer.site a:hover { color: #fff; }
   .app-actions .btn-3d { width: 100%; }
   .menu-root > li > a,
   .menu-root > li > button { min-height: 44px; }
-  .nav-panel {
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-    height: 100dvh;
-    max-height: 100dvh;
-  }
   .hero .btn-row {
     flex-direction: column;
     align-items: stretch;
