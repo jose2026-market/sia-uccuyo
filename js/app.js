@@ -262,6 +262,14 @@ function isInstitutionalGuest(institucion, mensaje) {
   return true;
 }
 
+function setProyectos(n) {
+  var el = $("#c-proyectos");
+  if (!el) return;
+  var v = Number(n);
+  if (!(v > 0)) v = 8;
+  el.textContent = formatNum(v);
+}
+
 function applyState(data) {
   if (!data || data.ok === false) throw new Error((data && data.error) || "bad-state");
   visitas = Array.isArray(data.visitas) ? data.visitas : [];
@@ -269,6 +277,7 @@ function applyState(data) {
     return isInstitutionalGuest(n && n.institucion, n && n.mensaje);
   });
   sinGeorref = Number(data.sinGeorref) || 0;
+  if (data.proyectos != null) setProyectos(data.proyectos);
   renderRanking();
   drawMarkers();
   renderLibro();
@@ -1194,7 +1203,8 @@ function initNav() {
   $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
 }
 function initCounters() {
-  [["#c-proyectos", 8], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
+  setProyectos(8);
+  [["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
     var el = $(pair[0]);
     if (!el) return;
     el.textContent = formatNum(pair[1]);

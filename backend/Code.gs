@@ -1,4 +1,6 @@
 var SITE = "semillero";
+var FORM_ID = "1qHvn-2PLpb0zLi0j_g69Jv3CVsTcz7hZwHjl43bfq04";
+var PROYECTOS_FALLBACK = 8;
 
 function doGet(e) {
   return handleRequest(e);
@@ -178,12 +180,77 @@ function migrateUnknownVisits(st) {
   st.visitas = kept;
 }
 
+function foldProject(s) {
+  s = String(s || "").toLowerCase();
+  var from = "áéíóúüñàèìòùäëïöâêîôû";
+  var to = "aeiouunaeiouaeioaeiou";
+  var i;
+  var out = "";
+  for (i = 0; i < s.length; i++) {
+    var ch = s.charAt(i);
+    var idx = from.indexOf(ch);
+    if (idx >= 0) ch = to.charAt(idx);
+    if (!/[a-z0-9]/.test(ch)) ch = " ";
+    out += ch;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function isEmptyProject(s) {
+  var k = foldProject(s);
+  return !k || k.length < 3 ||
+    k === "n a" || k === "na" || k === "ninguno" || k === "ninguna" ||
+    k === "sin proyecto" || k === "no se" || k === "a definir" || k === "s n";
+}
+
+function countFormProjects() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get("proyectos_n");
+  if (hit != null && hit !== "") {
+    var cached = Number(hit);
+    if (cached >= 0) return cached;
+  }
+  var n = PROYECTOS_FALLBACK;
+  try {
+    var form = FormApp.openById(FORM_ID);
+    var items = form.getItems();
+    var projectItem = null;
+    var i;
+    for (i = 0; i < items.length; i++) {
+      var title = String(items[i].getTitle() || "").toLowerCase();
+      if (title.indexOf("proyecto") >= 0 || title.indexOf("ip:") >= 0) {
+        projectItem = items[i];
+        break;
+      }
+    }
+    if (projectItem) {
+      var seen = {};
+      var responses = form.getResponses();
+      for (i = 0; i < responses.length; i++) {
+        var ir = responses[i].getResponseForItem(projectItem);
+        if (!ir) continue;
+        var val = ir.getResponse();
+        var text = Object.prototype.toString.call(val) === "[object Array]" ? val.join(" ") : String(val || "");
+        if (isEmptyProject(text)) continue;
+        seen[foldProject(text)] = true;
+      }
+      var keys = Object.keys(seen);
+      if (keys.length) n = keys.length;
+    }
+  } catch (err) {
+    n = PROYECTOS_FALLBACK;
+  }
+  cache.put("proyectos_n", String(n), 300);
+  return n;
+}
+
 function publicState(st) {
   return {
     ok: true,
     visitas: st.visitas,
     libro: publicLibro(st.libro),
-    sinGeorref: Number(st.sinGeorref) || 0
+    sinGeorref: Number(st.sinGeorref) || 0,
+    proyectos: countFormProjects()
   };
 }
 
