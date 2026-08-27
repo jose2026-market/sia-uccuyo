@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/styles.css?v=14" />
+  <link rel="stylesheet" href="css/styles.css?v=15" />
 </head>
 <body>
   <a class="skip" href="#inicio" data-i18n="skip">Ir al contenido</a>
@@ -43,6 +43,7 @@
           <button type="button" class="nav-close" id="nav-close" aria-label="Cerrar menú">×</button>
         </div>
         <ul class="menu-root">
+          <li data-pillar="inicio"><a href="#inicio" data-i18n="nav.inicio">Inicio</a></li>
           <li class="has-sub" data-pillar="semillero">
             <button type="button" data-i18n="nav.pillar.semillero">El Semillero</button>
             <ul>
@@ -168,34 +169,25 @@
     <section class="panel" id="numeros">
       <p class="kicker" data-i18n="sec.num.kicker">Indicadores</p>
       <h2 class="titulo" data-i18n="sec.num.title">El Semillero en números</h2>
-      <p class="lead" data-i18n="sec.num.lead">Cifras verificables del programa y del alcance de las visitas: provincia, región, país y mundo. Algunas se actualizan solas. No se guarda la IP.</p>
+      <p class="lead" data-i18n="sec.num.lead">Cifras verificables del programa y del alcance de las visitas: mundo, país y provincia / región. Algunas se actualizan solas. No se guarda la IP.</p>
       <div class="grid-4">
-        <div class="stat"><b id="c-inscriptos">6</b><span data-i18n="sec.num.insc">Inscriptos en el primer corte</span></div>
+        <div class="stat"><b id="c-proyectos">8</b><span data-i18n="sec.num.proy">Proyectos presentados</span></div>
         <div class="stat"><b id="c-lineas">6</b><span data-i18n="sec.num.lineas">Líneas estratégicas</span></div>
         <div class="stat"><b id="c-niveles">5</b><span data-i18n="sec.num.niveles">Niveles de formación</span></div>
         <div class="stat"><b id="c-visitas">0</b><span data-i18n="sec.num.visitas">Visitas en el mundo</span></div>
       </div>
       <div class="scope-tabs" role="tablist" aria-label="Alcance geográfico">
-        <button type="button" class="scope-tab on" role="tab" aria-selected="true" data-scope="provincia" data-i18n="sec.num.tab.prov">Provincia</button>
-        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="region" data-i18n="sec.num.tab.reg">Región</button>
+        <button type="button" class="scope-tab on" role="tab" aria-selected="true" data-scope="mundo" data-i18n="sec.num.tab.mundo">Mundo</button>
         <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="pais" data-i18n="sec.num.tab.pais">País</button>
-        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="mundo" data-i18n="sec.num.tab.mundo">Mundo</button>
+        <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="provreg" data-i18n="sec.num.tab.provreg">Provincia / región</button>
       </div>
-      <div class="scope-board on" data-scope-panel="provincia">
-        <p class="kicker" data-i18n="sec.num.prov.kicker">San Luis</p>
-        <p class="lead" data-i18n="sec.num.prov.lead">Sede del Semillero. Visitas estimadas con origen en la provincia.</p>
-        <div class="grid-2">
-          <div class="stat"><b id="c-vis-prov">0</b><span data-i18n="sec.num.prov.vis">Visitas desde la provincia</span></div>
-          <div class="stat"><b>1</b><span data-i18n="sec.num.prov.sede">Provincia sede</span></div>
-        </div>
-      </div>
-      <div class="scope-board" data-scope-panel="region">
-        <p class="kicker" data-i18n="sec.num.reg.kicker">Cuyo</p>
-        <p class="lead" data-i18n="sec.num.reg.lead">San Luis, San Juan y Mendoza: la región de la UCCuyo.</p>
+      <div class="scope-board on" data-scope-panel="mundo">
+        <p class="kicker" data-i18n="sec.num.mundo.kicker">Mundo</p>
+        <p class="lead" data-i18n="sec.num.mundo.lead">Todas las visitas registradas en el mapa, de cualquier país.</p>
         <div class="grid-3">
-          <div class="stat"><b id="c-vis-reg">0</b><span data-i18n="sec.num.reg.vis">Visitas desde Cuyo</span></div>
-          <div class="stat"><b id="c-vis-reg-n">0</b><span data-i18n="sec.num.reg.n">Provincias de Cuyo con visitas</span></div>
-          <div class="stat"><b>3</b><span data-i18n="sec.num.reg.total">Provincias de la región</span></div>
+          <div class="stat"><b id="c-vis-mundo">0</b><span data-i18n="sec.num.mundo.vis">Visitas con origen</span></div>
+          <div class="stat"><b id="c-vis-mundo-paises">0</b><span data-i18n="sec.num.mundo.paises">Países</span></div>
+          <div class="stat"><b id="c-vis-mundo-reg">0</b><span data-i18n="sec.num.mundo.reg">Provincias / regiones</span></div>
         </div>
       </div>
       <div class="scope-board" data-scope-panel="pais">
@@ -206,13 +198,14 @@
           <div class="stat"><b id="c-vis-pais-n">0</b><span data-i18n="sec.num.pais.n">Provincias / regiones con visitas</span></div>
         </div>
       </div>
-      <div class="scope-board" data-scope-panel="mundo">
-        <p class="kicker" data-i18n="sec.num.mundo.kicker">Mundo</p>
-        <p class="lead" data-i18n="sec.num.mundo.lead">Todas las visitas registradas en el mapa, de cualquier país.</p>
-        <div class="grid-3">
-          <div class="stat"><b id="c-vis-mundo">0</b><span data-i18n="sec.num.mundo.vis">Visitas con origen</span></div>
-          <div class="stat"><b id="c-vis-mundo-paises">0</b><span data-i18n="sec.num.mundo.paises">Países</span></div>
-          <div class="stat"><b id="c-vis-mundo-reg">0</b><span data-i18n="sec.num.mundo.reg">Provincias / regiones</span></div>
+      <div class="scope-board" data-scope-panel="provreg">
+        <p class="kicker" data-i18n="sec.num.provreg.kicker">Provincia / región</p>
+        <p class="lead" data-i18n="sec.num.provreg.lead">Sede en San Luis y alcance en Cuyo (San Luis, San Juan y Mendoza).</p>
+        <div class="grid-4">
+          <div class="stat"><b id="c-vis-prov">0</b><span data-i18n="sec.num.prov.vis">Visitas desde San Luis</span></div>
+          <div class="stat"><b id="c-vis-reg">0</b><span data-i18n="sec.num.reg.vis">Visitas desde Cuyo</span></div>
+          <div class="stat"><b id="c-vis-reg-n">0</b><span data-i18n="sec.num.reg.n">Provincias de Cuyo con visitas</span></div>
+          <div class="stat"><b>3</b><span data-i18n="sec.num.reg.total">Provincias de la región</span></div>
         </div>
       </div>
       <p class="lead" style="margin-top:16px" data-i18n="sec.num.ritmo">Ritmo del Semillero: convocatoria abierta, formación en cinco niveles y un prototipo por trayecto.</p>
@@ -295,6 +288,13 @@
         <div class="rank-panels">
           <details class="rank-block" open>
             <summary>
+              <span data-i18n="sec.vis.mundo">Mundo</span>
+              <span class="rank-count" id="n-mundo"></span>
+            </summary>
+            <ul class="origin-list" id="ranking-mundo"></ul>
+          </details>
+          <details class="rank-block" open>
+            <summary>
               <span data-i18n="sec.vis.paises">Países</span>
               <span class="rank-count" id="n-paises"></span>
             </summary>
@@ -302,7 +302,7 @@
           </details>
           <details class="rank-block" open>
             <summary>
-              <span data-i18n="sec.vis.regiones">Provincias y regiones por país</span>
+              <span data-i18n="sec.vis.regiones">Provincia / región</span>
               <span class="rank-count" id="n-regiones"></span>
             </summary>
             <ul class="origin-list" id="ranking-regiones"></ul>
@@ -381,6 +381,7 @@
       </div>
       <div>
         <p class="kicker" data-i18n="nav.pillar.semillero">El Semillero</p>
+        <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
         <a href="#equipo" data-i18n="nav.equipo">Equipo</a>
         <a href="#semillero" data-i18n="nav.que">Qué hacemos</a>
         <a href="#numeros" data-i18n="nav.numeros">Números</a>
@@ -404,9 +405,9 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/config.js?v=14"></script>
-  <script src="js/i18n-dict.js?v=14"></script>
-  <script src="js/i18n.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/config.js?v=15"></script>
+  <script src="js/i18n-dict.js?v=15"></script>
+  <script src="js/i18n.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>

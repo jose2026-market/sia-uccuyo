@@ -661,6 +661,10 @@ function bindOriginClicks(ul, items, kind) {
       var row = items.find(function (v) { return v.id === li.dataset.id; });
       var zoomKind = (row && row.kind) || li.getAttribute("data-kind") || kind;
       if (row && map) {
+        if (zoomKind === "mundo") {
+          map.setView([12, -20], 2);
+          return;
+        }
         var ll = zoomKind === "paises" ? countryCoords(row.sample || row) : coordsFor(row.sample || row);
         if (ll) map.setView(ll, zoomKind === "paises" ? 4 : 6);
       }
@@ -691,11 +695,18 @@ function renderRanking() {
   ).filter(function (item) {
     return foldName(item.label) !== noReg && !isUnknownLabel(item.label);
   });
+  var t = totals(visitas);
+  renderCollapsedList($("#ranking-mundo"), t.located ? [{
+    id: "mundo",
+    label: tt("sec.vis.mundo", "Mundo"),
+    n: t.located,
+    kind: "mundo"
+  }] : [], "mundo");
   renderCollapsedList($("#ranking-paises"), paises, "paises");
   renderRegionGroups($("#ranking-regiones"), groupRegionsByCountry(regiones));
+  setCountLabel("#n-mundo", t.located ? 1 : 0);
   setCountLabel("#n-paises", paises.length);
   setCountLabel("#n-regiones", regiones.length);
-  var t = totals(visitas);
   if ($("#n-todas")) $("#n-todas").textContent = formatNum(t.todas);
   if ($("#n-libro")) $("#n-libro").textContent = formatNum(libro.length);
   var note = $("#geo-note");
@@ -1084,7 +1095,7 @@ function initNav() {
   var links = $$(".menu-root a, .drawer-cta a[href^='#']");
   var pillars = $$(".menu-root [data-pillar]");
   var PILLAR = {
-    inicio: "semillero",
+    inicio: "inicio",
     equipo: "semillero",
     semillero: "semillero",
     numeros: "semillero",
@@ -1183,7 +1194,7 @@ function initNav() {
   $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
 }
 function initCounters() {
-  [["#c-inscriptos", 6], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
+  [["#c-proyectos", 8], ["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
     var el = $(pair[0]);
     if (!el) return;
     el.textContent = formatNum(pair[1]);
