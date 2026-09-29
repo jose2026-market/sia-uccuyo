@@ -50,7 +50,7 @@ window.I18N_DICT = {
   "sec.num.title": { es: "El Semillero en números", en: "The Seedbed in numbers" },
   "sec.num.lead": { es: "Cifras verificables del programa y del alcance de las visitas: mundo, país y provincia / región. Algunas se actualizan solas. No se guarda la IP.", en: "Verifiable figures for the programme and visit reach: world, country and province / region. Some update automatically. The IP is not stored." },
   "sec.num.proy": { es: "Proyectos presentados", en: "Projects presented" },
-  "sec.num.insc": { es: "Inscriptos en el primer corte", en: "Enrolled in the first window" },
+  "sec.num.insc": { es: "Inscriptos", en: "Enrolled students" },
   "sec.num.lineas": { es: "Líneas estratégicas", en: "Strategic lines" },
   "sec.num.niveles": { es: "Niveles de formación", en: "Training levels" },
   "sec.num.visitas": { es: "Visitas en el mundo", en: "Visits worldwide" },

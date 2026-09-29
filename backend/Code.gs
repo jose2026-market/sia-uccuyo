@@ -1,5 +1,7 @@
 var SITE = "semillero";
 var FORM_ID = "1qHvn-2PLpb0zLi0j_g69Jv3CVsTcz7hZwHjl43bfq04";
+var SHEET_ID = "18N76yD4mmGYWFmaAUaQfcYXFz8cSlGNYVf608OwLptA";
+var INSCRITOS_FALLBACK = 16;
 var PROYECTOS_FALLBACK = 8;
 
 function doGet(e) {
@@ -203,19 +205,69 @@ function isEmptyProject(s) {
     k === "sin proyecto" || k === "no se" || k === "a definir" || k === "s n";
 }
 
-function countFormProjects() {
-  var cache = CacheService.getScriptCache();
-  var hit = cache.get("proyectos_n");
-  if (hit != null && hit !== "") {
-    var cached = Number(hit);
-    if (cached >= 0) return cached;
+function countFromSheet() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sh = ss.getSheets()[0];
+  var values = sh.getDataRange().getValues();
+  var people = {};
+  var seen = {};
+  var i;
+  for (i = 1; i < values.length; i++) {
+    var row = values[i];
+    var email = String(row[2] || "").trim().toLowerCase();
+    var name = foldProject(row[1] || "");
+    var key = email || name;
+    if (!key) continue;
+    people[key] = true;
+    var text = String(row[4] || "");
+    if (!isEmptyProject(text)) seen[foldProject(text)] = true;
   }
-  var n = PROYECTOS_FALLBACK;
+  return {
+    ok: true,
+    inscriptos: Object.keys(people).length,
+    proyectos: Object.keys(seen).length
+  };
+}
+
+function countFormStats() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get("form_stats");
+  if (hit) {
+    try {
+      var cached = JSON.parse(hit);
+      if (cached && cached.ok && cached.inscriptos >= 0) {
+        return cached;
+      }
+    } catch (ignore) {}
+  }
+  var stats = { ok: false, inscriptos: INSCRITOS_FALLBACK, proyectos: PROYECTOS_FALLBACK };
+  try {
+    stats = countFromSheet();
+    cache.put("form_stats", JSON.stringify(stats), 120);
+    return stats;
+  } catch (errSheet) {}
   try {
     var form = FormApp.openById(FORM_ID);
+    var responses = form.getResponses();
+    var emails = {};
+    var hasEmail = false;
+    var i;
+    for (i = 0; i < responses.length; i++) {
+      var em = "";
+      try {
+        em = String(responses[i].getRespondentEmail() || "").trim().toLowerCase();
+      } catch (e2) {
+        em = "";
+      }
+      if (em) {
+        hasEmail = true;
+        emails[em] = true;
+      }
+    }
+    stats.inscriptos = hasEmail ? Object.keys(emails).length : responses.length;
+
     var items = form.getItems();
     var projectItem = null;
-    var i;
     for (i = 0; i < items.length; i++) {
       var title = String(items[i].getTitle() || "").toLowerCase();
       if (title.indexOf("proyecto") >= 0 || title.indexOf("ip:") >= 0) {
@@ -223,9 +275,8 @@ function countFormProjects() {
         break;
       }
     }
+    var seen = {};
     if (projectItem) {
-      var seen = {};
-      var responses = form.getResponses();
       for (i = 0; i < responses.length; i++) {
         var ir = responses[i].getResponseForItem(projectItem);
         if (!ir) continue;
@@ -234,23 +285,25 @@ function countFormProjects() {
         if (isEmptyProject(text)) continue;
         seen[foldProject(text)] = true;
       }
-      var keys = Object.keys(seen);
-      if (keys.length) n = keys.length;
     }
+    stats.proyectos = Object.keys(seen).length;
+    stats.ok = true;
+    cache.put("form_stats", JSON.stringify(stats), 120);
   } catch (err) {
-    n = PROYECTOS_FALLBACK;
+    stats.ok = false;
   }
-  cache.put("proyectos_n", String(n), 300);
-  return n;
+  return stats;
 }
 
 function publicState(st) {
+  var form = countFormStats();
   return {
     ok: true,
     visitas: st.visitas,
     libro: publicLibro(st.libro),
     sinGeorref: Number(st.sinGeorref) || 0,
-    proyectos: countFormProjects()
+    inscriptos: form.inscriptos,
+    proyectos: form.proyectos
   };
 }
 

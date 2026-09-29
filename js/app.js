@@ -262,11 +262,11 @@ function isInstitutionalGuest(institucion, mensaje) {
   return true;
 }
 
-function setProyectos(n) {
-  var el = $("#c-proyectos");
+function setInscriptos(n) {
+  var el = $("#c-inscriptos") || $("#c-proyectos");
   if (!el) return;
   var v = Number(n);
-  if (!(v > 0)) v = 8;
+  if (!isFinite(v) || v < 0) return;
   el.textContent = formatNum(v);
 }
 
@@ -277,7 +277,8 @@ function applyState(data) {
     return isInstitutionalGuest(n && n.institucion, n && n.mensaje);
   });
   sinGeorref = Number(data.sinGeorref) || 0;
-  if (data.proyectos != null) setProyectos(data.proyectos);
+  if (data.inscriptos != null) setInscriptos(data.inscriptos);
+  else if (data.proyectos != null) setInscriptos(data.proyectos);
   renderRanking();
   drawMarkers();
   renderLibro();
@@ -288,8 +289,20 @@ function applyState(data) {
   return data;
 }
 
+function loadCountsFallback() {
+  return fetch("data/counts.json?_=" + Date.now(), { cache: "no-store" }).then(function (r) {
+    if (!r.ok) throw new Error("no-counts");
+    return r.json();
+  }).then(function (o) {
+    if (o && o.inscriptos != null) setInscriptos(o.inscriptos);
+    return o;
+  });
+}
+
 function loadSharedState() {
-  return fetchApps("state").then(applyState);
+  return fetchApps("state").then(applyState, function () {
+    return loadCountsFallback();
+  });
 }
 
 function totals(rows) {
@@ -1203,7 +1216,7 @@ function initNav() {
   $$("section.panel, .hero").forEach(function (s) { io.observe(s); });
 }
 function initCounters() {
-  setProyectos(8);
+  setInscriptos(16);
   [["#c-lineas", 6], ["#c-niveles", 5]].forEach(function (pair) {
     var el = $(pair[0]);
     if (!el) return;
