@@ -299,8 +299,67 @@ function loadCountsFallback() {
   });
 }
 
+function visitasFromMap(data) {
+  var regions = Array.isArray(data && data.regions) ? data.regions : [];
+  var countries = Array.isArray(data && data.countries) ? data.countries : [];
+  var used = {};
+  var rows = [];
+  regions.forEach(function (r) {
+    var code = String(r.country || "").trim().toUpperCase();
+    var n = Number(r.count) || 0;
+    if (!/^[A-Z]{2}$/.test(code) || n <= 0) return;
+    used[code] = (used[code] || 0) + n;
+    var name = String(r.countryName || "").trim();
+    var region = String(r.region || "").trim();
+    rows.push({
+      id: (code + "-" + region).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      n: n,
+      country: code,
+      countryName: name,
+      region: region,
+      city: "",
+      lugar: [region, name].filter(Boolean).join(", "),
+      lat: 0,
+      lon: 0,
+      tipo: /san luis|san juan|mendoza/i.test(region) ? "interna" : "externa"
+    });
+  });
+  countries.forEach(function (c) {
+    var code = String(c.code || "").trim().toUpperCase();
+    var n = Number(c.count) || 0;
+    var rest = n - (used[code] || 0);
+    if (!/^[A-Z]{2}$/.test(code) || rest <= 0) return;
+    var name = String(c.name || "").trim();
+    rows.push({
+      id: code.toLowerCase(),
+      n: rest,
+      country: code,
+      countryName: name,
+      region: "",
+      city: "",
+      lugar: name,
+      lat: 0,
+      lon: 0,
+      tipo: "externa"
+    });
+  });
+  return rows;
+}
+
+function applyVisitMap(data) {
+  if (!data || data.ok === false) throw new Error((data && data.error) || "bad-map");
+  return applyState({
+    ok: true,
+    visitas: visitasFromMap(data),
+    libro: libro
+  });
+}
+
 function loadSharedState() {
-  return fetchApps("state").then(applyState, function () {
+  return fetchApps("visitmap").then(function (data) {
+    applyVisitMap(data);
+    return loadCountsFallback().catch(function () { return data; });
+  }, function () {
     return loadCountsFallback();
   });
 }
@@ -1004,17 +1063,15 @@ function finishOrigin(g) {
 }
 
 async function pingVisitgeo(g) {
-  var located = hasCountry(g) ? "1" : "0";
+  var code = String(g.country || "").trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code) || code === "XX" || code === "ZZ") return null;
   var extra =
-    "country=" + encodeURIComponent(g.country || "") +
+    "country=" + encodeURIComponent(code) +
     "&countryName=" + encodeURIComponent(g.countryName || "") +
-    "&region=" + encodeURIComponent(g.region || "") +
-    "&city=" + encodeURIComponent(g.city || "") +
-    "&tipo=" + encodeURIComponent(g.tipo || "externa") +
-    "&lat=" + encodeURIComponent(g.lat || 0) +
-    "&lon=" + encodeURIComponent(g.lon || 0) +
-    "&located=" + located;
-  return fetchApps("visitgeo", extra).then(applyState);
+    "&region=" + encodeURIComponent(g.region || "");
+  var saved = await fetchApps("visitgeo", extra);
+  if (!saved || saved.ok === false) throw new Error((saved && saved.error) || "visitgeo");
+  return fetchApps("visitmap").then(applyVisitMap);
 }
 
 async function geolocalizar() {
@@ -1265,7 +1322,7 @@ function initForm() {
       "&lugar=" + encodeURIComponent(lugar);
     fetchApps("libro", extra)
       .then(function (data) {
-        if (!data || data.ok === false) {
+        if (!data || data.ok === false || !Array.isArray(data.libro)) {
           if (ok) {
             ok.hidden = false;
             ok.textContent = data && data.error === "rejected"
