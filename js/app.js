@@ -1074,7 +1074,11 @@ async function pingVisitgeo(g) {
   return fetchApps("visitmap").then(applyVisitMap);
 }
 
+let geoStarted = false;
+
 async function geolocalizar() {
+  if (sessionStorage.getItem(GEO_SESSION_KEY) || geoStarted) return;
+  geoStarted = true;
   var banner = $("#banner-you");
   var g = {
     country: "",
@@ -1118,11 +1122,11 @@ async function geolocalizar() {
   if ($("#campo-lugar") && g.lugar) $("#campo-lugar").value = g.lugar;
   if (map && g.lat && g.lon) map.setView([g.lat, g.lon], 5);
 
-  if (sessionStorage.getItem(GEO_SESSION_KEY)) return;
   try {
     await pingVisitgeo(g);
     sessionStorage.setItem(GEO_SESSION_KEY, "1");
   } catch (_be) {
+    geoStarted = false;
     if (banner) {
       banner.classList.add("show");
       banner.textContent = tt(
